@@ -79,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             IconButton(
               icon: Icon(Icons.settings, size: 30,),
-              color: Colors.red,
+              color: Colors.white,
               onPressed: () {},
             ),
           ],
