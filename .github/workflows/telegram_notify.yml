@@ -1,11 +1,15 @@
-name: Telegram Notification
-on: [push] # ដំណើរការរាល់ពេលមានគេ Push
+name: GitHub to Telegram Notification
+
+on:
+  push:
+    branches:
+      - main  # ឬដាក់ឈ្មោះ branch ដែលអ្នកប្រើ (ឧទាហរណ៍: master, dev)
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Message
+      - name: Send Telegram Notification
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -13,11 +17,12 @@ jobs:
           format: html
           message: |
             <b>🚀 New Commit in Flutter Project</b>
-            <b>Repo:</b> ${ { github.repository } }
-            <b>Branch:</b> <code>${ { github.ref_name } }</code>
-            <b>Author:</b> ${ { github.actor } }
-            
+
+            <b>Repo:</b> ${{ github.repository }}
+            <b>Branch:</b> <code>${{ github.ref_name }}</code>
+            <b>Author:</b> ${{ github.actor }}
+
             <b>Message:</b>
-            <i>${ { github.event.commits[0].message } }</i>
-            
-            <a href="${ { github.event.commits[0].url } }">View Commit on GitHub</a>
+            <i>${{ github.event.commits[0].message }}</i>
+
+            <a href="${{ github.event.commits[0].url }}">View Commit on GitHub</a>
