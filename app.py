@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import telebot
 import os
 
-API_TOKEN = os.getenv("TELEGRAM_TOKEN") or "YOUR_BOT_TOKEN"
+API_TOKEN = os.getenv("TELEGRAM_TOKEN") or "7651199687:AAH0DrHoCQV81Kd6l8H7mvsClMShDuJCzWg"
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID") or "-4905408813"
 
 bot = telebot.TeleBot(API_TOKEN)
