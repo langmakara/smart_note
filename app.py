@@ -4,8 +4,8 @@ import time
 import os
 
 # ================= CONFIG =================
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN") or "7651199687:AAH0DrHoCQV81Kd6l8H7mvsClMShDuJCzWg"
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID") or "-4905408813"
+TELEGRAM_TOKEN = os.getenv("7651199687:AAH0DrHoCQV81Kd6l8H7mvsClMShDuJCzWg") or "7651199687:AAH0DrHoCQV81Kd6l8H7mvsClMShDuJCzWg"
+CHAT_ID = os.getenv("-4905408813") or "-4905408813"
 
 GITHUB_REPO = "username/repository"   # example: makara/smart_note
 BRANCH = "main"
