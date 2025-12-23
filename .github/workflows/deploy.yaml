@@ -1,4 +1,4 @@
-name: Run Telegram Bot 24/7
+name: Bot for see commit
 
 on:
   push:
