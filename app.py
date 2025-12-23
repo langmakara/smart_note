@@ -1,58 +1,36 @@
 import telebot
-import requests
-import time
 import os
 
-# ================= CONFIG =================
-TELEGRAM_TOKEN = os.getenv("7651199687:AAH0DrHoCQV81Kd6l8H7mvsClMShDuJCzWg") or "7651199687:AAH0DrHoCQV81Kd6l8H7mvsClMShDuJCzWg"
-CHAT_ID = os.getenv("-4905408813") or "-4905408813"
+# 1. Setup your credentials (or use environment variables for security)
+# Best practice: API_TOKEN = os.getenv("TELEGRAM_TOKEN")
+API_TOKEN = '8263985956:AAGC_XOIuLidE72XBhfcC_aBzWwN5IyfFYk'
+CHAT_ID = '-4905408813' 
 
-GITHUB_REPO = "username/repository"   # example: makara/smart_note
-BRANCH = "main"
-CHECK_INTERVAL = 60  # seconds
-# ==========================================
+bot = telebot.TeleBot(API_TOKEN)
 
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
-last_commit_sha = None
-
-
-def send_notification(commit):
+def send_github_notification(repo, branch, author, message, url):
+    """
+    Formatted message matching your original YAML logic
+    """
     text = (
-        f"<b>🚀 New Commit</b>\n\n"
-        f"<b>Repo:</b> {GITHUB_REPO}\n"
-        f"<b>Author:</b> {commit['commit']['author']['name']}\n\n"
-        f"<b>Message:</b>\n<i>{commit['commit']['message']}</i>\n\n"
-        f"<a href='{commit['html_url']}'>View Commit</a>"
+        f"<b>🚀 New Commit in Flutter Project</b>\n\n"
+        f"<b>Repo:</b> {repo}\n"
+        f"<b>Branch:</b> <code>{branch}</code>\n"
+        f"<b>Author:</b> {author}\n\n"
+        f"<b>Message:</b>\n<i>{message}</i>\n\n"
+        f"<a href='{url}'>View Commit on GitHub</a>"
     )
-    bot.send_message(CHAT_ID, text, parse_mode="HTML")
+    
+    bot.send_message(CHAT_ID, text, parse_mode='HTML')
+    print("✅ Notification sent to Telegram")
 
-
-def check_github():
-    global last_commit_sha
-
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/commits/{BRANCH}"
-    response = requests.get(url)
-
-    if response.status_code != 200:
-        print("❌ Failed to fetch commits")
-        return
-
-    commit = response.json()
-    sha = commit["sha"]
-
-    if last_commit_sha is None:
-        last_commit_sha = sha
-        print("✅ Initial commit saved")
-        return
-
-    if sha != last_commit_sha:
-        last_commit_sha = sha
-        send_notification(commit)
-        print("🚀 New commit detected")
-
-
+# Example usage (you can call this from a webhook receiver)
 if __name__ == "__main__":
-    print("🤖 GitHub → Telegram bot started")
-    while True:
-        check_github()
-        time.sleep(CHECK_INTERVAL)
+    # In a real scenario, these values come from GitHub's JSON payload
+    send_github_notification(
+        repo="YourUser/FlutterProject",
+        branch="main",
+        author="DeveloperName",
+        message="Update UI components",
+        url="https://github.com/your-repo-link"
+    )
