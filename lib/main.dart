@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Smart Note'),
     );
   }
 }
@@ -36,7 +36,13 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        //title: Text('Home'),
+        leading: IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () {
+            // action here
+          },
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.search),
@@ -60,6 +66,11 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             IconButton(
               icon: Icon(Icons.home, size: 30,),
+              color: Colors.white,
+              onPressed: () {},
+            ),
+            IconButton(
+              icon: Icon(Icons.calendar_month, size: 30,),
               color: Colors.white,
               onPressed: () {},
             ),
