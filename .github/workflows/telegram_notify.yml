@@ -1,0 +1,23 @@
+name: Telegram Notification
+on: [push] # ដំណើរការរាល់ពេលមានគេ Push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: |
+            <b>🚀 New Commit in Flutter Project</b>
+            <b>Repo:</b> ${ { github.repository } }
+            <b>Branch:</b> <code>${ { github.ref_name } }</code>
+            <b>Author:</b> ${ { github.actor } }
+            
+            <b>Message:</b>
+            <i>${ { github.event.commits[0].message } }</i>
+            
+            <a href="${ { github.event.commits[0].url } }">View Commit on GitHub</a>
