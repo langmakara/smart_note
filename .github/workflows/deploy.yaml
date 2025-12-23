@@ -16,6 +16,4 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Run bot
-        run: python app.py
-      - name: Run bot
         run: python webhook.py
