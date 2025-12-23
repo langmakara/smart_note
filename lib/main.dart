@@ -58,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       bottomNavigationBar: Container(
-        color: Colors.deepPurple,
+        color: Colors.purple,
         padding: const EdgeInsets.only(bottom: 25),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
