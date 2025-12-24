@@ -3,7 +3,7 @@ name: GitHub to Telegram Notification
 on:
   push:
     branches:
-      - main #test bot
+      - main 
 
 jobs:
   build:
