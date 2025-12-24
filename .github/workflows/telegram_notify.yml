@@ -3,7 +3,7 @@ name: GitHub to Telegram Notification
 on:
   push:
     branches:
-      - main  # ឬដាក់ឈ្មោះ branch ដែលអ្នកប្រើ (ឧទាហរណ៍: master, dev)
+      - main
 
 jobs:
   build:
