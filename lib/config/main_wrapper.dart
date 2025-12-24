@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../features/home/ui/home.dart';     // import home page របស់អ្នក
 import '../features/calender/ui/calender.dart'; // import calendar page របស់អ្នក
+import '../features/notification/ui/notifications_page.dart'; // import notification page របស់អ្នក
+import '../features/settings/ui/settings_page.dart'; // import settings page របស់អ្នក
 
 class MainWrapper extends StatefulWidget {
   const MainWrapper({super.key});
@@ -16,8 +18,8 @@ class _MainWrapperState extends State<MainWrapper> {
   final List<Widget> _pages = [
     const HomePage(),
     const CalendarPage(),
-    const Center(child: Text("Notifications Page")),
-    const Center(child: Text("Settings Page")),
+    const NotificationsPage(),
+    const SettingsPage(),
   ];
 
   @override
