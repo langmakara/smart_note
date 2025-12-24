@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       ),
       home: const MyHomePage(title: 'Smart Note'),
     );
-  }
+  }// you not me
 }
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
