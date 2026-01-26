@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/app_settings_model.dart';
+import '../../../providers/theme_provider.dart';
 import '../widget/theme_switch_tile.dart';
 import 'appearance_settings_page.dart';
 import 'color_settings_page.dart';
@@ -23,10 +25,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: themeProvider.appBarColor,
         elevation: 1,
         title: const Text(
           "Settings",
@@ -43,10 +47,12 @@ class _SettingsPageState extends State<SettingsPage> {
           // Appearance Section
           _buildSection(
             title: "Appearance",
+            themeProvider: themeProvider,
             children: [
               ThemeSwitchTile(
-                isDarkMode: _settings.isDarkMode,
+                isDarkMode: themeProvider.isDarkMode,
                 onThemeChanged: (value) {
+                  themeProvider.setDarkMode(value);
                   _updateSettings(_settings.copyWith(isDarkMode: value));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -62,10 +68,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
                 },
               ),
-              const Divider(height: 1),
+              Divider(color: themeProvider.dividerColor),
               ListTile(
                 leading: Icon(Icons.color_lens, color: _settings.accentColor),
-                title: const Text("Accent Color"),
+                title: Text(
+                  "Accent Color",
+                  style: TextStyle(color: themeProvider.textColor),
+                ),
                 trailing: Container(
                   width: 24,
                   height: 24,
@@ -86,11 +95,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
                 },
               ),
-              const Divider(height: 1),
+              Divider(color: themeProvider.dividerColor),
               ListTile(
                 leading: const Icon(Icons.palette, color: Colors.purple),
-                title: const Text("Appearance Settings"),
-                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                title: Text(
+                  "Appearance Settings",
+                  style: TextStyle(color: themeProvider.textColor),
+                ),
+                trailing: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -109,10 +121,14 @@ class _SettingsPageState extends State<SettingsPage> {
           // Preferences Section
           _buildSection(
             title: "Preferences",
+            themeProvider: themeProvider,
             children: [
               ListTile(
                 leading: const Icon(Icons.language, color: Colors.purple),
-                title: const Text("Language"),
+                title: Text(
+                  "Language",
+                  style: TextStyle(color: themeProvider.textColor),
+                ),
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -143,11 +159,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
                 },
               ),
-              const Divider(height: 1),
+              Divider(color: themeProvider.dividerColor),
               ListTile(
                 leading: const Icon(Icons.notifications, color: Colors.purple),
-                title: const Text("Notifications"),
-                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                title: Text(
+                  "Notifications",
+                  style: TextStyle(color: themeProvider.textColor),
+                ),
+                trailing: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -166,11 +185,15 @@ class _SettingsPageState extends State<SettingsPage> {
           // About Section
           _buildSection(
             title: "About",
+            themeProvider: themeProvider,
             children: [
               ListTile(
                 leading: const Icon(Icons.info_outline, color: Colors.purple),
-                title: const Text("About Smart Note"),
-                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                title: Text(
+                  "About Smart Note",
+                  style: TextStyle(color: themeProvider.textColor),
+                ),
+                trailing: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
                 onTap: () {
                   showAboutDialog(
                     context: context,
@@ -182,23 +205,27 @@ class _SettingsPageState extends State<SettingsPage> {
                       color: Colors.purple,
                     ),
                     children: [
-                      const Text(
+                      Text(
                         "A beautiful and simple note-taking app built with Flutter.",
+                        style: TextStyle(color: themeProvider.textColor),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         "© 2025 Smart Notes. All rights reserved.",
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: themeProvider.subtitleColor),
                       ),
                     ],
                   );
                 },
               ),
-              const Divider(height: 1),
+              Divider(color: themeProvider.dividerColor),
               ListTile(
                 leading: const Icon(Icons.storage, color: Colors.purple),
-                title: const Text("Data Management"),
-                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                title: Text(
+                  "Data Management",
+                  style: TextStyle(color: themeProvider.textColor),
+                ),
+                trailing: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -211,11 +238,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
                 },
               ),
-              const Divider(height: 1),
+              Divider(color: themeProvider.dividerColor),
               ListTile(
                 leading: const Icon(Icons.star_border, color: Colors.purple),
-                title: const Text("Rate the App"),
-                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                title: Text(
+                  "Rate the App",
+                  style: TextStyle(color: themeProvider.textColor),
+                ),
+                trailing: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -229,11 +259,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
                 },
               ),
-              const Divider(height: 1),
+              Divider(color: themeProvider.dividerColor),
               ListTile(
                 leading: const Icon(Icons.feedback, color: Colors.purple),
-                title: const Text("Send Feedback"),
-                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                title: Text(
+                  "Send Feedback",
+                  style: TextStyle(color: themeProvider.textColor),
+                ),
+                trailing: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -257,14 +290,15 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildSection({
     required String title,
     required List<Widget> children,
+    required ThemeProvider themeProvider,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: themeProvider.shadowColor,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -277,10 +311,10 @@ class _SettingsPageState extends State<SettingsPage> {
             padding: const EdgeInsets.all(16),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
-                color: Colors.black87,
+                color: themeProvider.textColor,
               ),
             ),
           ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/app_settings_model.dart';
+import '../../../providers/theme_provider.dart';
 
 class AppearanceSettingsPage extends StatefulWidget {
   final AppSettings settings;
@@ -31,10 +33,12 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: themeProvider.appBarColor,
         elevation: 1,
         title: const Text(
           'Appearance',
@@ -51,11 +55,11 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: themeProvider.cardColor,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: themeProvider.shadowColor,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -64,11 +68,12 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Theme Mode',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: themeProvider.textColor,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -84,6 +89,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                             themeMode: 'light',
                             isDarkMode: false,
                           ));
+                          themeProvider.setDarkMode(false);
                         },
                       ),
                     ),
@@ -98,6 +104,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                             themeMode: 'dark',
                             isDarkMode: true,
                           ));
+                          themeProvider.setDarkMode(true);
                         },
                       ),
                     ),
@@ -125,11 +132,11 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: themeProvider.cardColor,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: themeProvider.shadowColor,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -138,19 +145,26 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Display Options',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: themeProvider.textColor,
                   ),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.grid_on, color: Colors.purple),
-                  title: const Text('Show Grid Lines'),
-                  subtitle: const Text('Display grid lines in calendar'),
+                  title: Text(
+                    'Show Grid Lines',
+                    style: TextStyle(color: themeProvider.textColor),
+                  ),
+                  subtitle: Text(
+                    'Display grid lines in calendar',
+                    style: TextStyle(color: themeProvider.subtitleColor),
+                  ),
                   trailing: Switch(
                     value: _settings.showGridLines,
                     onChanged: (value) {
@@ -159,12 +173,18 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                     activeColor: Colors.purple,
                   ),
                 ),
-                const Divider(height: 1),
+                Divider(color: themeProvider.dividerColor),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.zoom_out, color: Colors.blue),
-                  title: const Text('Compact Mode'),
-                  subtitle: const Text('Smaller cards and tighter spacing'),
+                  title: Text(
+                    'Compact Mode',
+                    style: TextStyle(color: themeProvider.textColor),
+                  ),
+                  subtitle: Text(
+                    'Smaller cards and tighter spacing',
+                    style: TextStyle(color: themeProvider.subtitleColor),
+                  ),
                   trailing: Switch(
                     value: _settings.compactMode,
                     onChanged: (value) {
@@ -182,11 +202,11 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: themeProvider.cardColor,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: themeProvider.shadowColor,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -195,19 +215,26 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Animations',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: themeProvider.textColor,
                   ),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.animation, color: Colors.green),
-                  title: const Text('Reduce Animations'),
-                  subtitle: const Text('Minimize motion effects'),
+                  title: Text(
+                    'Reduce Animations',
+                    style: TextStyle(color: themeProvider.textColor),
+                  ),
+                  subtitle: Text(
+                    'Minimize motion effects',
+                    style: TextStyle(color: themeProvider.subtitleColor),
+                  ),
                   trailing: Switch(
                     value: false,
                     onChanged: (value) {

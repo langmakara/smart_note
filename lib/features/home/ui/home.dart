@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../widget/note_card.dart';
 import '../../../models/note_model.dart';
+import '../../../providers/theme_provider.dart';
 import 'note_edit_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -149,11 +151,13 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: themeProvider.appBarColor,
         title: const Text(
           "Smart Notes",
           style: TextStyle(
@@ -166,7 +170,7 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: Icon(
               _searchQuery.isNotEmpty ? Icons.close : Icons.search,
-              color: Colors.grey,
+              color: themeProvider.subtitleColor,
             ),
             onPressed: () {
               if (_searchQuery.isNotEmpty) {
@@ -183,9 +187,9 @@ class _HomePageState extends State<HomePage> {
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search notes...',
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                prefixIcon: Icon(Icons.search, color: themeProvider.subtitleColor),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: themeProvider.searchFillColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -212,7 +216,7 @@ class _HomePageState extends State<HomePage> {
                       Icon(
                         Icons.note_alt_outlined,
                         size: 80,
-                        color: Colors.grey[300],
+                        color: themeProvider.subtitleColor.withOpacity(0.5),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -221,7 +225,7 @@ class _HomePageState extends State<HomePage> {
                             : 'No notes yet',
                         style: TextStyle(
                           fontSize: 18,
-                          color: Colors.grey[600],
+                          color: themeProvider.subtitleColor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -230,7 +234,7 @@ class _HomePageState extends State<HomePage> {
                         _searchQuery.isNotEmpty
                             ? 'Try a different search term'
                             : 'Tap + to create your first note',
-                        style: TextStyle(color: Colors.grey[500]),
+                        style: TextStyle(color: themeProvider.subtitleColor.withOpacity(0.7)),
                       ),
                     ],
                   ),
@@ -248,10 +252,10 @@ class _HomePageState extends State<HomePage> {
                             _searchQuery.isNotEmpty
                                 ? 'Search Results (${_filteredNotes.length})'
                                 : 'Recent Notes (${_filteredNotes.length})',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: themeProvider.textColor,
                             ),
                           ),
                           if (_searchQuery.isEmpty)

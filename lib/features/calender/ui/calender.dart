@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/event_model.dart';
+import '../../../providers/theme_provider.dart';
 import '../widget/calendar_grid.dart';
 import 'event_edit_page.dart';
 import 'events_list_page.dart';
@@ -90,6 +92,7 @@ class _CalendarPageState extends State<CalendarPage> {
             setState(() => _events.add(event));
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
+                duration: Duration(seconds: 1),
                 content: Text('Event "${event.title}" created!'),
                 backgroundColor: Colors.green,
                 behavior: SnackBarBehavior.floating,
@@ -138,10 +141,12 @@ class _CalendarPageState extends State<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: themeProvider.appBarColor,
         elevation: 1,
         title: Text(
           '${_monthNames[_focusedMonth.month - 1]} ${_focusedMonth.year}',
@@ -163,147 +168,17 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_left, color: Colors.grey),
+            icon: Icon(Icons.chevron_left, color: themeProvider.subtitleColor),
             onPressed: () => _addMonths(-1),
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_right, color: Colors.grey),
+            icon: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
             onPressed: () => _addMonths(1),
           ),
         ],
       ),
       body: Column(
         children: [
-          // Selected Date Display
-          if (_selectedDate != null) ...[
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.purple.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.purple.withOpacity(0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.event, color: Colors.purple),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Selected Date',
-                          style: TextStyle(
-                            color: Colors.purple[700],
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          '${_selectedDate!.day} ${_monthNames[_selectedDate!.month - 1]} ${_selectedDate!.year}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.grey),
-                    onPressed: () {
-                      setState(() => _selectedDate = null);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            // Events for Selected Date
-            if (_getEventsForDate(_selectedDate!).isNotEmpty)
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.today, color: Colors.green[700]),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${_getEventsForDate(_selectedDate!).length} Event(s)',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green[700],
-                          ),
-                        ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: () => _viewEvents(context),
-                          child: const Text(
-                            'View All',
-                            style: TextStyle(
-                              color: Colors.purple,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ..._getEventsForDate(_selectedDate!).take(3).map(
-                          (event) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: event.color,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    event.title,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                if (!event.isAllDay)
-                                  Text(
-                                    '${event.startTime.hour.toString().padLeft(2, '0')}:${event.startTime.minute.toString().padLeft(2, '0')}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                  ],
-                ),
-              ),
-          ],
           // Weekday Headers
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -315,16 +190,16 @@ class _CalendarPageState extends State<CalendarPage> {
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
+                          color: themeProvider.searchFillColor,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Center(
                           child: Text(
                             day,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 12,
-                              color: Colors.grey,
+                              color: themeProvider.subtitleColor,
                             ),
                           ),
                         ),
@@ -352,6 +227,7 @@ class _CalendarPageState extends State<CalendarPage> {
                             ? '${date.day} ${_monthNames[date.month - 1]}: ${dayEvents.length} event(s)'
                             : 'Selected: ${date.day} ${_monthNames[date.month - 1]} ${date.year}',
                       ),
+                      duration: Duration(seconds: 1),
                       backgroundColor: dayEvents.isNotEmpty ? Colors.green : Colors.purple,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
@@ -371,11 +247,11 @@ class _CalendarPageState extends State<CalendarPage> {
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: themeProvider.cardColor,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: themeProvider.shadowColor,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -388,6 +264,7 @@ class _CalendarPageState extends State<CalendarPage> {
                     icon: Icons.add_circle_outline,
                     label: 'Add Event',
                     onTap: () => _addEvent(context),
+                    themeProvider: themeProvider,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -396,6 +273,7 @@ class _CalendarPageState extends State<CalendarPage> {
                     icon: Icons.today,
                     label: 'View Events',
                     onTap: () => _viewEvents(context),
+                    themeProvider: themeProvider,
                   ),
                 ),
               ],
@@ -411,6 +289,7 @@ class _CalendarPageState extends State<CalendarPage> {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    required ThemeProvider themeProvider,
   }) {
     return Material(
       color: Colors.transparent,
@@ -420,9 +299,9 @@ class _CalendarPageState extends State<CalendarPage> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: themeProvider.searchFillColor,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[200]!),
+            border: Border.all(color: themeProvider.dividerColor),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -431,10 +310,10 @@ class _CalendarPageState extends State<CalendarPage> {
               const SizedBox(width: 6),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
-                  color: Colors.black87,
+                  color: themeProvider.textColor,
                 ),
               ),
             ],

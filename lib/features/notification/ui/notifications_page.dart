@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/theme_provider.dart';
 import '../widget/notification_tile.dart';
 
 class NotificationsPage extends StatefulWidget {
@@ -95,10 +97,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: themeProvider.appBarColor,
         elevation: 1,
         title: const Text(
           "Notifications",
@@ -131,21 +135,21 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   Icon(
                     Icons.notifications_none,
                     size: 80,
-                    color: Colors.grey[300],
+                    color: themeProvider.subtitleColor.withOpacity(0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     "No notifications",
                     style: TextStyle(
                       fontSize: 18,
-                      color: Colors.grey[600],
+                      color: themeProvider.subtitleColor,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     "You're all caught up!",
-                    style: TextStyle(color: Colors.grey[500]),
+                    style: TextStyle(color: themeProvider.subtitleColor.withOpacity(0.7)),
                   ),
                 ],
               ),
@@ -157,12 +161,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         "New",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: themeProvider.textColor,
                         ),
                       ),
                       Container(
@@ -202,12 +206,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 ],
                 if (_earlierNotifications.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     "Earlier",
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: themeProvider.textColor,
                     ),
                   ),
                   const SizedBox(height: 12),

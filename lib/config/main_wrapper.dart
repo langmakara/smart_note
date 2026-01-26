@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../features/home/ui/home.dart';
 import '../features/calender/ui/calender.dart';
 import '../features/notification/ui/notifications_page.dart';
 import '../features/settings/ui/settings_page.dart';
+import '../providers/theme_provider.dart';
 
 class MainWrapper extends StatefulWidget {
   const MainWrapper({super.key});
@@ -13,26 +15,35 @@ class MainWrapper extends StatefulWidget {
 
 class _MainWrapperState extends State<MainWrapper> {
   int _currentIndex = 0;
-  final List<Widget> _pages = [
-    const HomePage(),
-    const CalendarPage(),
-    const NotificationsPage(),
-    const SettingsPage(),
-  ];
+  late List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      const HomePage(),
+      const CalendarPage(),
+      const NotificationsPage(),
+      const SettingsPage(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
+      backgroundColor: themeProvider.backgroundColor,
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: themeProvider.bottomNavBgColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: themeProvider.shadowColor,
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -46,21 +57,25 @@ class _MainWrapperState extends State<MainWrapper> {
               icon: Icons.home,
               label: 'Home',
               index: 0,
+              themeProvider: themeProvider,
             ),
             _buildNavItem(
               icon: Icons.calendar_month,
               label: 'Calendar',
               index: 1,
+              themeProvider: themeProvider,
             ),
             _buildNavItem(
               icon: Icons.notifications,
               label: 'Alerts',
               index: 2,
+              themeProvider: themeProvider,
             ),
             _buildNavItem(
               icon: Icons.settings,
               label: 'Settings',
               index: 3,
+              themeProvider: themeProvider,
             ),
           ],
         ),
@@ -72,9 +87,10 @@ class _MainWrapperState extends State<MainWrapper> {
     required IconData icon,
     required String label,
     required int index,
+    required ThemeProvider themeProvider,
   }) {
     final isSelected = _currentIndex == index;
-    final color = isSelected ? Colors.purple : Colors.grey;
+    final color = isSelected ? Colors.purple : themeProvider.subtitleColor;
 
     return Material(
       color: Colors.transparent,
