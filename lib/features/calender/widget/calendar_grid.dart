@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../../models/event_model.dart';
 
 class CalendarGrid extends StatelessWidget {
   final DateTime focusedMonth;
   final List<String> monthNames;
   final Function(DateTime)? onDateSelected;
   final DateTime? selectedDate;
+  final List<Event> events;
 
   const CalendarGrid({
     super.key,
@@ -12,6 +14,7 @@ class CalendarGrid extends StatelessWidget {
     required this.monthNames,
     this.onDateSelected,
     this.selectedDate,
+    this.events = const [],
   });
 
   int _daysInMonth(DateTime month) {
@@ -47,6 +50,8 @@ class CalendarGrid extends StatelessWidget {
             selectedDate!.month == focusedMonth.month &&
             selectedDate!.day == dayNumber;
 
+        final dayEvents = events.where((event) => event.isOnDate(date)).toList();
+
         return GestureDetector(
           onTap: () {
             if (onDateSelected != null) {
@@ -77,18 +82,45 @@ class CalendarGrid extends StatelessWidget {
                     ]
                   : null,
             ),
-            child: Center(
-              child: Text(
-                '$dayNumber',
-                style: TextStyle(
-                  fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected
-                      ? Colors.white
-                      : isToday
-                          ? Colors.blueAccent
-                          : Colors.black87,
+            child: Stack(
+              children: [
+                Center(
+                  child: Text(
+                    '$dayNumber',
+                    style: TextStyle(
+                      fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? Colors.white
+                          : isToday
+                              ? Colors.blueAccent
+                              : Colors.black87,
+                    ),
+                  ),
                 ),
-              ),
+                if (dayEvents.isNotEmpty)
+                  Positioned(
+                    bottom: 2,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: dayEvents
+                          .take(3)
+                          .map(
+                            (event) => Container(
+                              width: 4,
+                              height: 4,
+                              margin: const EdgeInsets.symmetric(horizontal: 1),
+                              decoration: BoxDecoration(
+                                color: isSelected ? Colors.white : event.color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+              ],
             ),
           ),
         );

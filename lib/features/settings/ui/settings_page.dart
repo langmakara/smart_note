@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../models/app_settings_model.dart';
 import '../widget/theme_switch_tile.dart';
+import 'appearance_settings_page.dart';
+import 'color_settings_page.dart';
+import 'language_settings_page.dart';
+import 'notification_settings_page.dart';
+import 'data_management_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -9,7 +15,11 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool _isDarkMode = false;
+  AppSettings _settings = AppSettings();
+
+  void _updateSettings(AppSettings newSettings) {
+    setState(() => _settings = newSettings);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,11 +45,9 @@ class _SettingsPageState extends State<SettingsPage> {
             title: "Appearance",
             children: [
               ThemeSwitchTile(
-                isDarkMode: _isDarkMode,
+                isDarkMode: _settings.isDarkMode,
                 onThemeChanged: (value) {
-                  setState(() => _isDarkMode = value);
-                  // In a real app, you would use Provider or Bloc here
-                  // to update the entire app theme
+                  _updateSettings(_settings.copyWith(isDarkMode: value));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
@@ -56,21 +64,41 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const Divider(height: 1),
               ListTile(
-                leading: const Icon(Icons.color_lens, color: Colors.purple),
+                leading: Icon(Icons.color_lens, color: _settings.accentColor),
                 title: const Text("Accent Color"),
                 trailing: Container(
                   width: 24,
                   height: 24,
-                  decoration: const BoxDecoration(
-                    color: Colors.purple,
+                  decoration: BoxDecoration(
+                    color: _settings.accentColor,
                     shape: BoxShape.circle,
                   ),
                 ),
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Accent color picker coming soon!'),
-                      backgroundColor: Colors.blue,
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ColorSettingsPage(
+                        settings: _settings,
+                        onSettingsChanged: _updateSettings,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.palette, color: Colors.purple),
+                title: const Text("Appearance Settings"),
+                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AppearanceSettingsPage(
+                        settings: _settings,
+                        onSettingsChanged: _updateSettings,
+                      ),
                     ),
                   );
                 },
@@ -91,23 +119,26 @@ class _SettingsPageState extends State<SettingsPage> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.purple.withOpacity(0.1),
+                    color: _settings.accentColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
-                    "English",
+                  child: Text(
+                    _settings.language,
                     style: TextStyle(
-                      color: Colors.purple,
+                      color: _settings.accentColor,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),
                   ),
                 ),
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Language selection coming soon!'),
-                      backgroundColor: Colors.blue,
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LanguageSettingsPage(
+                        settings: _settings,
+                        onSettingsChanged: _updateSettings,
+                      ),
                     ),
                   );
                 },
@@ -118,10 +149,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: const Text("Notifications"),
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Notification settings coming soon!'),
-                      backgroundColor: Colors.blue,
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NotificationSettingsPage(
+                        settings: _settings,
+                        onSettingsChanged: _updateSettings,
+                      ),
                     ),
                   );
                 },
@@ -162,14 +196,35 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const Divider(height: 1),
               ListTile(
+                leading: const Icon(Icons.storage, color: Colors.purple),
+                title: const Text("Data Management"),
+                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DataManagementPage(
+                        settings: _settings,
+                        onSettingsChanged: _updateSettings,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
                 leading: const Icon(Icons.star_border, color: Colors.purple),
                 title: const Text("Rate the App"),
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Thanks for your support! ⭐'),
+                    SnackBar(
+                      content: const Text('Thanks for your support! ⭐'),
                       backgroundColor: Colors.amber,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   );
                 },
@@ -181,9 +236,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Feedback form coming soon!'),
+                    SnackBar(
+                      content: const Text('Feedback form coming soon!'),
                       backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   );
                 },
