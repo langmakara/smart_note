@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 class CalendarGrid extends StatelessWidget {
   final DateTime focusedMonth;
   final List<String> monthNames;
+  final Function(DateTime)? onDateSelected;
+  final DateTime? selectedDate;
 
   const CalendarGrid({
     super.key,
     required this.focusedMonth,
-    required this.monthNames
+    required this.monthNames,
+    this.onDateSelected,
+    this.selectedDate,
   });
 
   int _daysInMonth(DateTime month) {
@@ -16,7 +20,6 @@ class CalendarGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // កែសម្រួល logic ថ្ងៃទី១ ចំថ្ងៃច័ន្ទ (Flutter: Monday = 1, Sunday = 7)
     final firstOfMonth = DateTime(focusedMonth.year, focusedMonth.month, 1);
     final leadingEmpty = firstOfMonth.weekday - 1;
     final totalDays = _daysInMonth(focusedMonth);
@@ -35,28 +38,55 @@ class CalendarGrid extends StatelessWidget {
         if (index < leadingEmpty) return const SizedBox.shrink();
 
         final dayNumber = index - leadingEmpty + 1;
+        final date = DateTime(focusedMonth.year, focusedMonth.month, dayNumber);
         final isToday = today.year == focusedMonth.year &&
             today.month == focusedMonth.month &&
             today.day == dayNumber;
+        final isSelected = selectedDate != null &&
+            selectedDate!.year == focusedMonth.year &&
+            selectedDate!.month == focusedMonth.month &&
+            selectedDate!.day == dayNumber;
 
         return GestureDetector(
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Selected: $dayNumber ${monthNames[focusedMonth.month - 1]}'))
-            );
+            if (onDateSelected != null) {
+              onDateSelected!(date);
+            }
           },
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
-              color: isToday ? Colors.blueAccent.withOpacity(0.2) : Colors.grey[100],
+              color: isSelected
+                  ? Colors.purple
+                  : isToday
+                      ? Colors.blueAccent.withOpacity(0.2)
+                      : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
-              border: isToday ? Border.all(color: Colors.blueAccent) : null,
+              border: isSelected
+                  ? Border.all(color: Colors.purple, width: 2)
+                  : isToday
+                      ? Border.all(color: Colors.blueAccent)
+                      : null,
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: Colors.purple.withOpacity(0.3),
+                        blurRadius: 6,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : null,
             ),
             child: Center(
               child: Text(
                 '$dayNumber',
                 style: TextStyle(
-                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                  color: isToday ? Colors.blueAccent : Colors.black87,
+                  fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected
+                      ? Colors.white
+                      : isToday
+                          ? Colors.blueAccent
+                          : Colors.black87,
                 ),
               ),
             ),

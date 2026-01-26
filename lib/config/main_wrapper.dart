@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../features/home/ui/home.dart';     // import home page របស់អ្នក
-import '../features/calender/ui/calender.dart'; // import calendar page របស់អ្នក
-import '../features/notification/ui/notifications_page.dart'; // import notification page របស់អ្នក
-import '../features/settings/ui/settings_page.dart'; // import settings page របស់អ្នក
+import '../features/home/ui/home.dart';
+import '../features/calender/ui/calender.dart';
+import '../features/notification/ui/notifications_page.dart';
+import '../features/settings/ui/settings_page.dart';
 
 class MainWrapper extends StatefulWidget {
   const MainWrapper({super.key});
@@ -12,9 +12,7 @@ class MainWrapper extends StatefulWidget {
 }
 
 class _MainWrapperState extends State<MainWrapper> {
-  int _currentIndex = 0; // កំណត់ index បច្ចុប្បន្ន
-
-  // បញ្ជីទំព័រដែលចង់បង្ហាញ
+  int _currentIndex = 0;
   final List<Widget> _pages = [
     const HomePage(),
     const CalendarPage(),
@@ -25,37 +23,105 @@ class _MainWrapperState extends State<MainWrapper> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // IndexedStack ជួយរក្សាស្ថានភាពទំព័រ (មិនឱ្យបាត់ទិន្នន័យពេលដូរទៅមក)
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
       ),
       bottomNavigationBar: Container(
-        color: Colors.purple,
-        padding: const EdgeInsets.only(bottom: 10, top: 5),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildNavItem(Icons.home, 0),
-            _buildNavItem(Icons.calendar_month, 1),
-            _buildNavItem(Icons.notifications, 2),
-            _buildNavItem(Icons.settings, 3),
+            _buildNavItem(
+              icon: Icons.home,
+              label: 'Home',
+              index: 0,
+            ),
+            _buildNavItem(
+              icon: Icons.calendar_month,
+              label: 'Calendar',
+              index: 1,
+            ),
+            _buildNavItem(
+              icon: Icons.notifications,
+              label: 'Alerts',
+              index: 2,
+            ),
+            _buildNavItem(
+              icon: Icons.settings,
+              label: 'Settings',
+              index: 3,
+            ),
           ],
         ),
       ),
     );
   }
 
-  // Widget សម្រាប់បង្កើតប៊ូតុងនីមួយៗ
-  Widget _buildNavItem(IconData icon, int index) {
-    return IconButton(
-      icon: Icon(icon, size: 30),
-      color: _currentIndex == index ? Colors.yellow : Colors.white,
-      onPressed: () {
-        setState(() {
-          _currentIndex = index; // នៅពេលចុច វានឹងដូរ index ដើម្បីដូរ Page
-        });
-      },
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = _currentIndex == index;
+    final color = isSelected ? Colors.purple : Colors.grey;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setState(() => _currentIndex = index);
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: isSelected
+              ? BoxDecoration(
+                  color: Colors.purple.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                )
+              : null,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.purple : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 24,
+                  color: isSelected ? Colors.white : color,
+                ),
+              ),
+              const SizedBox(height: 4),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: TextStyle(
+                  fontSize: isSelected ? 12 : 11,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: color,
+                ),
+                child: Text(label),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
