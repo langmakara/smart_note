@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/event_model.dart';
+import '../../../providers/theme_provider.dart';
 
 class CalendarGrid extends StatelessWidget {
   final DateTime focusedMonth;
@@ -23,6 +25,7 @@ class CalendarGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final firstOfMonth = DateTime(focusedMonth.year, focusedMonth.month, 1);
     final leadingEmpty = firstOfMonth.weekday - 1;
     final totalDays = _daysInMonth(focusedMonth);
@@ -33,8 +36,9 @@ class CalendarGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 7,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1.1,
       ),
       itemCount: leadingEmpty + totalDays,
       itemBuilder: (context, index) {
@@ -60,27 +64,36 @@ class CalendarGrid extends StatelessWidget {
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: isSelected
                   ? Colors.purple
                   : isToday
-                      ? Colors.blueAccent.withOpacity(0.2)
-                      : Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
+                      ? Colors.blueAccent.withValues(alpha: 0.15)
+                      : themeProvider.searchFillColor,
+              borderRadius: BorderRadius.circular(10),
               border: isSelected
                   ? Border.all(color: Colors.purple, width: 2)
                   : isToday
-                      ? Border.all(color: Colors.blueAccent)
-                      : null,
+                      ? Border.all(color: Colors.blueAccent.withValues(alpha: 0.5), width: 1.5)
+                      : Border.all(color: themeProvider.dividerColor, width: 0.5),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: Colors.purple.withOpacity(0.3),
-                        blurRadius: 6,
+                        color: Colors.purple.withValues(alpha: 0.25),
+                        blurRadius: 8,
                         spreadRadius: 1,
                       ),
                     ]
-                  : null,
+                  : isToday
+                      ? [
+                          BoxShadow(
+                            color: Colors.blueAccent.withValues(alpha: 0.15),
+                            blurRadius: 6,
+                            spreadRadius: 0.5,
+                          ),
+                        ]
+                      : null,
             ),
             child: Stack(
               children: [
@@ -88,12 +101,13 @@ class CalendarGrid extends StatelessWidget {
                   child: Text(
                     '$dayNumber',
                     style: TextStyle(
-                      fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontSize: 14,
+                      fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.w600,
                       color: isSelected
                           ? Colors.white
                           : isToday
                               ? Colors.blueAccent
-                              : Colors.black87,
+                              : themeProvider.textColor,
                     ),
                   ),
                 ),
@@ -108,9 +122,9 @@ class CalendarGrid extends StatelessWidget {
                           .take(3)
                           .map(
                             (event) => Container(
-                              width: 4,
-                              height: 4,
-                              margin: const EdgeInsets.symmetric(horizontal: 1),
+                              width: 5,
+                              height: 5,
+                              margin: const EdgeInsets.symmetric(horizontal: 1.5),
                               decoration: BoxDecoration(
                                 color: isSelected ? Colors.white : event.color,
                                 shape: BoxShape.circle,

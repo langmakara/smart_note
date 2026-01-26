@@ -38,6 +38,15 @@ class _CalendarPageState extends State<CalendarPage> {
         location: 'Conference Room A',
       ),
       Event(
+        id: '4',
+        title: 'Planning Meeting',
+        description: 'Sprint planning session',
+        startTime: DateTime(now.year, now.month, now.day, 10, 0),
+        endTime: DateTime(now.year, now.month, now.day, 11, 0),
+        color: Colors.purple,
+        location: 'Conference Room B',
+      ),
+      Event(
         id: '2',
         title: 'Lunch Break',
         description: 'Team lunch',
@@ -181,25 +190,32 @@ class _CalendarPageState extends State<CalendarPage> {
         children: [
           // Weekday Headers
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.only(
+              left: 16, 
+              right: 16, 
+              top: 20.0,
+              bottom: 0,
+            ),
             child: Row(
               children: _weekdayNames
                   .map(
                     (day) => Expanded(
                       child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
                           color: themeProvider.searchFillColor,
                           borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: themeProvider.dividerColor, width: 0.5),
                         ),
                         child: Center(
                           child: Text(
                             day,
                             style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
                               color: themeProvider.subtitleColor,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ),
@@ -209,7 +225,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   .toList(),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           // Calendar Grid
           Expanded(
             child: Padding(
@@ -219,22 +235,6 @@ class _CalendarPageState extends State<CalendarPage> {
                 monthNames: _monthNames,
                 onDateSelected: (date) {
                   setState(() => _selectedDate = date);
-                  final dayEvents = _getEventsForDate(date);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        dayEvents.isNotEmpty
-                            ? '${date.day} ${_monthNames[date.month - 1]}: ${dayEvents.length} event(s)'
-                            : 'Selected: ${date.day} ${_monthNames[date.month - 1]} ${date.year}',
-                      ),
-                      duration: Duration(seconds: 1),
-                      backgroundColor: dayEvents.isNotEmpty ? Colors.green : Colors.purple,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  );
                 },
                 selectedDate: _selectedDate,
                 events: _events,
@@ -247,33 +247,37 @@ class _CalendarPageState extends State<CalendarPage> {
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: themeProvider.cardColor,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: themeProvider.shadowColor,
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Row(
               children: [
                 Expanded(
-                  child: _buildQuickAction(
-                    icon: Icons.add_circle_outline,
-                    label: 'Add Event',
-                    onTap: () => _addEvent(context),
-                    themeProvider: themeProvider,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.purple,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: _buildQuickAction(
+                      icon: Icons.add_circle_outline,
+                      label: 'Add Event',
+                      onTap: () => _addEvent(context),
+                      themeProvider: themeProvider,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildQuickAction(
-                    icon: Icons.today,
-                    label: 'View Events',
-                    onTap: () => _viewEvents(context),
-                    themeProvider: themeProvider,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.purple,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: _buildQuickAction(
+                      icon: Icons.today,
+                      label: 'View Events',
+                      onTap: () => _viewEvents(context),
+                      themeProvider: themeProvider,
+                    ),
                   ),
                 ),
               ],
@@ -298,22 +302,17 @@ class _CalendarPageState extends State<CalendarPage> {
         borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: themeProvider.searchFillColor,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: themeProvider.dividerColor),
-          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 20, color: Colors.purple),
+              Icon(icon, size: 20, color: Colors.white),
               const SizedBox(width: 6),
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
-                  color: themeProvider.textColor,
+                  color: Colors.white,
                 ),
               ),
             ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/event_model.dart';
+import '../../../providers/theme_provider.dart';
 import '../widget/event_card.dart';
 import 'event_edit_page.dart';
 
@@ -49,10 +51,12 @@ class _EventsListPageState extends State<EventsListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: themeProvider.appBarColor,
         elevation: 1,
         title: Text(
           widget.selectedDate != null ? 'Events' : 'All Events',
@@ -73,15 +77,15 @@ class _EventsListPageState extends State<EventsListPage> {
           // Search and Filter Bar
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.white,
+            color: themeProvider.cardColor,
             child: Column(
               children: [
                 TextField(
                   decoration: InputDecoration(
                     hintText: 'Search events...',
-                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                    prefixIcon: Icon(Icons.search, color: themeProvider.subtitleColor),
                     filled: true,
-                    fillColor: Colors.grey[50],
+                    fillColor: themeProvider.searchFillColor,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -99,11 +103,11 @@ class _EventsListPageState extends State<EventsListPage> {
                 // Color Filter
                 Row(
                   children: [
-                    const Text(
+                    Text(
                       'Filter by color:',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: themeProvider.subtitleColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -113,17 +117,17 @@ class _EventsListPageState extends State<EventsListPage> {
                         scrollDirection: Axis.horizontal,
                         child: Row(
                           children: [
-                            _buildColorFilter(null, 'All'),
+                            _buildColorFilter(null, 'All', themeProvider),
                             const SizedBox(width: 4),
-                            _buildColorFilter(Colors.blue, 'Blue'),
+                            _buildColorFilter(Colors.blue, 'Blue', themeProvider),
                             const SizedBox(width: 4),
-                            _buildColorFilter(Colors.purple, 'Purple'),
+                            _buildColorFilter(Colors.purple, 'Purple', themeProvider),
                             const SizedBox(width: 4),
-                            _buildColorFilter(Colors.green, 'Green'),
+                            _buildColorFilter(Colors.green, 'Green', themeProvider),
                             const SizedBox(width: 4),
-                            _buildColorFilter(Colors.orange, 'Orange'),
+                            _buildColorFilter(Colors.orange, 'Orange', themeProvider),
                             const SizedBox(width: 4),
-                            _buildColorFilter(Colors.red, 'Red'),
+                            _buildColorFilter(Colors.red, 'Red', themeProvider),
                           ],
                         ),
                       ),
@@ -143,7 +147,7 @@ class _EventsListPageState extends State<EventsListPage> {
                         Icon(
                           Icons.event_busy,
                           size: 64,
-                          color: Colors.grey[300],
+                          color: themeProvider.subtitleColor.withOpacity(0.5),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -152,7 +156,7 @@ class _EventsListPageState extends State<EventsListPage> {
                               : 'No events found',
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.grey[600],
+                            color: themeProvider.subtitleColor,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -161,7 +165,7 @@ class _EventsListPageState extends State<EventsListPage> {
                           'Tap the + button to add an event',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[400],
+                            color: themeProvider.subtitleColor.withOpacity(0.7),
                           ),
                         ),
                       ],
@@ -183,8 +187,9 @@ class _EventsListPageState extends State<EventsListPage> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.purple.withOpacity(0.1),
+                              color: Colors.purple.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.purple.withValues(alpha: 0.2), width: 0.5),
                             ),
                             child: Text(
                               _formatDate(date),
@@ -222,7 +227,7 @@ class _EventsListPageState extends State<EventsListPage> {
     );
   }
 
-  Widget _buildColorFilter(Color? color, String label) {
+  Widget _buildColorFilter(Color? color, String label, ThemeProvider themeProvider) {
     final isSelected = _filterColor == color;
     return GestureDetector(
       onTap: () {
@@ -231,9 +236,9 @@ class _EventsListPageState extends State<EventsListPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.purple : Colors.grey[100],
+          color: isSelected ? Colors.purple : themeProvider.searchFillColor,
           borderRadius: BorderRadius.circular(20),
-          border: isSelected ? null : Border.all(color: Colors.grey[300]!),
+          border: isSelected ? null : Border.all(color: themeProvider.dividerColor),
         ),
         child: Row(
           children: [
@@ -252,7 +257,7 @@ class _EventsListPageState extends State<EventsListPage> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : Colors.black87,
+                color: isSelected ? Colors.white : themeProvider.textColor,
               ),
             ),
           ],
