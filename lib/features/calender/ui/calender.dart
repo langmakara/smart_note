@@ -144,10 +144,6 @@ class _CalendarPageState extends State<CalendarPage> {
     );
   }
 
-  List<Event> _getEventsForDate(DateTime date) {
-    return _events.where((event) => event.isOnDate(date)).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);

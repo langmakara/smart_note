@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../widget/note_card.dart';
 import '../../../models/note_model.dart';
 import '../../../providers/theme_provider.dart';
+import '../../../services/note_database.dart';
 import 'note_edit_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -25,46 +26,31 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadNotes() async {
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
     
-    // Sample data for demonstration
-    setState(() {
-      _notes.addAll([
-        Note(
-          id: '1',
-          title: 'Idea for App',
-          content: 'Create a clean UI for smart note app with flutter...',
-          createdAt: DateTime.now().subtract(const Duration(days: 2)),
-          color: Colors.purple,
+    try {
+      final notes = await NoteDatabase.instance.readAllNotes();
+      if (!mounted) return;
+      setState(() {
+        _notes.clear();
+        _notes.addAll(notes);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading notes: $e'),
+          backgroundColor: Colors.red,
         ),
-        Note(
-          id: '2',
-          title: 'Meeting Notes',
-          content: 'Discuss project timeline and deliverables with the team...',
-          createdAt: DateTime.now().subtract(const Duration(days: 1)),
-          color: Colors.blue,
-        ),
-        Note(
-          id: '3',
-          title: 'Shopping List',
-          content: 'Milk, Eggs, Bread, Coffee, Fruits...',
-          createdAt: DateTime.now(),
-          color: Colors.green,
-        ),
-        Note(
-          id: '4',
-          title: 'Book Ideas',
-          content: 'Write about personal growth and productivity...',
-          createdAt: DateTime.now().subtract(const Duration(days: 3)),
-          color: Colors.orange,
-        ),
-      ]);
-      _isLoading = false;
-    });
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
-  void _addNote() {
-    Navigator.push(
+  Future<void> _addNote() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => NoteEditPage(
@@ -76,40 +62,63 @@ class _HomePageState extends State<HomePage> {
               createdAt: DateTime.now(),
               color: color,
             );
-            setState(() {
-              _notes.insert(0, newNote);
-            });
+            return newNote;
           },
         ),
       ),
     );
+
+    if (result != null && mounted) {
+      await NoteDatabase.instance.create(result);
+      setState(() {
+        _notes.insert(0, result);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Note created!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
-  void _editNote(Note note) {
-    Navigator.push(
+  Future<void> _editNote(Note note) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => NoteEditPage(
           note: note,
           onSave: (title, content, color) {
-            setState(() {
-              final index = _notes.indexWhere((n) => n.id == note.id);
-              if (index != -1) {
-                _notes[index] = note.copyWith(
-                  title: title,
-                  content: content,
-                  color: color,
-                  updatedAt: DateTime.now(),
-                );
-              }
-            });
+            final updatedNote = note.copyWith(
+              title: title,
+              content: content,
+              color: color,
+              updatedAt: DateTime.now(),
+            );
+            return updatedNote;
           },
         ),
       ),
     );
+
+    if (result != null && mounted) {
+      await NoteDatabase.instance.update(result);
+      setState(() {
+        final index = _notes.indexWhere((n) => n.id == note.id);
+        if (index != -1) {
+          _notes[index] = result;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Note updated!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
-  void _deleteNote(String noteId) {
+  Future<void> _deleteNote(String noteId) async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -121,7 +130,8 @@ class _HomePageState extends State<HomePage> {
             child: const Text("Cancel"),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              await NoteDatabase.instance.delete(noteId);
               setState(() {
                 _notes.removeWhere((note) => note.id == noteId);
               });

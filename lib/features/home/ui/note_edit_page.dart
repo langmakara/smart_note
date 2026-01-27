@@ -3,7 +3,7 @@ import '../../../models/note_model.dart';
 
 class NoteEditPage extends StatefulWidget {
   final Note? note;
-  final Function(String title, String content, Color color) onSave;
+  final Note Function(String title, String content, Color color) onSave;
 
   const NoteEditPage({
     super.key,
@@ -57,18 +57,12 @@ class _NoteEditPageState extends State<NoteEditPage> {
       return;
     }
 
-    widget.onSave(
+    final note = widget.onSave(
       _titleController.text.trim(),
       _contentController.text.trim(),
       _selectedColor,
     );
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(widget.note == null ? 'Note created!' : 'Note updated!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    Navigator.pop(context, note);
   }
 
   @override
