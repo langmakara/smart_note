@@ -73,4 +73,30 @@ class Event {
         startTime.month == date.month &&
         startTime.day == date.day;
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'startTime': startTime.toIso8601String(),
+      'endTime': endTime.toIso8601String(),
+      'color': color.value,
+      'isAllDay': isAllDay,
+      'location': location,
+    };
+  }
+
+  factory Event.fromJson(Map<String, dynamic> json) {
+    return Event(
+      id: json['id'],
+      title: json['title'],
+      description: json['description'],
+      startTime: DateTime.parse(json['startTime']),
+      endTime: DateTime.parse(json['endTime']),
+      color: Color(json['color']),
+      isAllDay: json['isAllDay'] ?? false,
+      location: json['location'],
+    );
+  }
 }

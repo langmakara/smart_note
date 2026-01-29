@@ -32,11 +32,11 @@ class _SettingsPageState extends State<SettingsPage> {
       appBar: AppBar(
         backgroundColor: themeProvider.appBarColor,
         elevation: 1,
-        title: const Text(
+        title: Text(
           "Settings",
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.purple,
+            color: themeProvider.accentColor,
           ),
         ),
         centerTitle: true,
@@ -59,7 +59,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       content: Text(
                         value ? 'Dark mode enabled' : 'Light mode enabled',
                       ),
-                      backgroundColor: Colors.purple,
+                      backgroundColor: themeProvider.accentColor,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -97,7 +97,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Divider(color: themeProvider.dividerColor),
               ListTile(
-                leading: const Icon(Icons.palette, color: Colors.purple),
+                leading: Icon(Icons.palette, color: themeProvider.accentColor),
                 title: Text(
                   "Appearance Settings",
                   style: TextStyle(color: themeProvider.textColor),
@@ -124,7 +124,7 @@ class _SettingsPageState extends State<SettingsPage> {
             themeProvider: themeProvider,
             children: [
               ListTile(
-                leading: const Icon(Icons.language, color: Colors.purple),
+                leading: Icon(Icons.language, color: themeProvider.accentColor),
                 title: Text(
                   "Language",
                   style: TextStyle(color: themeProvider.textColor),
@@ -161,7 +161,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Divider(color: themeProvider.dividerColor),
               ListTile(
-                leading: const Icon(Icons.notifications, color: Colors.purple),
+                leading: Icon(Icons.notifications, color: themeProvider.accentColor),
                 title: Text(
                   "Notifications",
                   style: TextStyle(color: themeProvider.textColor),
@@ -188,7 +188,7 @@ class _SettingsPageState extends State<SettingsPage> {
             themeProvider: themeProvider,
             children: [
               ListTile(
-                leading: const Icon(Icons.info_outline, color: Colors.purple),
+                leading: Icon(Icons.info_outline, color: themeProvider.accentColor),
                 title: Text(
                   "About Smart Note",
                   style: TextStyle(color: themeProvider.textColor),
@@ -199,10 +199,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     context: context,
                     applicationName: "Smart Notes",
                     applicationVersion: "1.0.0",
-                    applicationIcon: const Icon(
+                    applicationIcon: Icon(
                       Icons.note_alt,
                       size: 48,
-                      color: Colors.purple,
+                      color: themeProvider.accentColor,
                     ),
                     children: [
                       Text(
@@ -220,7 +220,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Divider(color: themeProvider.dividerColor),
               ListTile(
-                leading: const Icon(Icons.storage, color: Colors.purple),
+                leading: Icon(Icons.storage, color: themeProvider.accentColor),
                 title: Text(
                   "Data Management",
                   style: TextStyle(color: themeProvider.textColor),
@@ -240,7 +240,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Divider(color: themeProvider.dividerColor),
               ListTile(
-                leading: const Icon(Icons.star_border, color: Colors.purple),
+                leading: Icon(Icons.star_border, color: themeProvider.accentColor),
                 title: Text(
                   "Rate the App",
                   style: TextStyle(color: themeProvider.textColor),
@@ -261,7 +261,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Divider(color: themeProvider.dividerColor),
               ListTile(
-                leading: const Icon(Icons.feedback, color: Colors.purple),
+                leading: Icon(Icons.feedback, color: themeProvider.accentColor),
                 title: Text(
                   "Send Feedback",
                   style: TextStyle(color: themeProvider.textColor),

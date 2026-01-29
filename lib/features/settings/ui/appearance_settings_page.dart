@@ -40,11 +40,11 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
       appBar: AppBar(
         backgroundColor: themeProvider.appBarColor,
         elevation: 1,
-        title: const Text(
+        title: Text(
           'Appearance',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.purple,
+            color: themeProvider.accentColor,
           ),
         ),
       ),
@@ -91,6 +91,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                           ));
                           themeProvider.setDarkMode(false);
                         },
+                        themeProvider: themeProvider,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -106,6 +107,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                           ));
                           themeProvider.setDarkMode(true);
                         },
+                        themeProvider: themeProvider,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -119,6 +121,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                             themeMode: 'system',
                           ));
                         },
+                        themeProvider: themeProvider,
                       ),
                     ),
                   ],
@@ -156,7 +159,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.grid_on, color: Colors.purple),
+                  leading: Icon(Icons.grid_on, color: themeProvider.accentColor),
                   title: Text(
                     'Show Grid Lines',
                     style: TextStyle(color: themeProvider.textColor),
@@ -170,7 +173,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                     onChanged: (value) {
                       _updateSettings(_settings.copyWith(showGridLines: value));
                     },
-                    activeColor: Colors.purple,
+                    activeColor: themeProvider.accentColor,
                   ),
                 ),
                 Divider(color: themeProvider.dividerColor),
@@ -265,6 +268,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
+    required ThemeProvider themeProvider,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -272,10 +276,10 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.purple : Colors.grey[100],
+          color: isSelected ? themeProvider.accentColor : Colors.grey[100],
           borderRadius: BorderRadius.circular(8),
           border: isSelected
-              ? Border.all(color: Colors.purple, width: 2)
+              ? Border.all(color: themeProvider.accentColor, width: 2)
               : Border.all(color: Colors.grey[200]!),
         ),
         child: Column(

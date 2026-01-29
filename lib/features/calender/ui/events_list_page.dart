@@ -60,14 +60,14 @@ class _EventsListPageState extends State<EventsListPage> {
         elevation: 1,
         title: Text(
           widget.selectedDate != null ? 'Events' : 'All Events',
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.purple,
+            color: themeProvider.accentColor,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.purple),
+            icon: Icon(Icons.add, color: themeProvider.accentColor),
             onPressed: () => _addEvent(context),
           ),
         ],
@@ -121,7 +121,7 @@ class _EventsListPageState extends State<EventsListPage> {
                             const SizedBox(width: 4),
                             _buildColorFilter(Colors.blue, 'Blue', themeProvider),
                             const SizedBox(width: 4),
-                            _buildColorFilter(Colors.purple, 'Purple', themeProvider),
+                            _buildColorFilter(themeProvider.accentColor, 'Accent', themeProvider),
                             const SizedBox(width: 4),
                             _buildColorFilter(Colors.green, 'Green', themeProvider),
                             const SizedBox(width: 4),
@@ -187,16 +187,16 @@ class _EventsListPageState extends State<EventsListPage> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.purple.withValues(alpha: 0.1),
+                              color: themeProvider.accentColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.purple.withValues(alpha: 0.2), width: 0.5),
+                              border: Border.all(color: themeProvider.accentColor.withValues(alpha: 0.2), width: 0.5),
                             ),
                             child: Text(
                               _formatDate(date),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.purple[700],
+                                color: themeProvider.accentColor.withOpacity(0.7),
                               ),
                             ),
                           ),
@@ -220,7 +220,7 @@ class _EventsListPageState extends State<EventsListPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addEvent(context),
-        backgroundColor: Colors.purple,
+        backgroundColor: themeProvider.accentColor,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
@@ -236,7 +236,7 @@ class _EventsListPageState extends State<EventsListPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.purple : themeProvider.searchFillColor,
+          color: isSelected ? themeProvider.accentColor : themeProvider.searchFillColor,
           borderRadius: BorderRadius.circular(20),
           border: isSelected ? null : Border.all(color: themeProvider.dividerColor),
         ),

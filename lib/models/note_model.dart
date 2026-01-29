@@ -43,6 +43,30 @@ class Note {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'content': content,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+      'color': color.value,
+      'isPinned': isPinned,
+    };
+  }
+
+  factory Note.fromJson(Map<String, dynamic> json) {
+    return Note(
+      id: json['id'],
+      title: json['title'],
+      content: json['content'],
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      color: Color(json['color']),
+      isPinned: json['isPinned'] ?? false,
+    );
+  }
+
   Note copyWith({
     String? title,
     String? content,

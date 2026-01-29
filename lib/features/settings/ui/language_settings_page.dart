@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/app_settings_model.dart';
+import '../../../providers/theme_provider.dart';
 
 class LanguageSettingsPage extends StatefulWidget {
   final AppSettings settings;
@@ -19,15 +21,7 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
   late AppSettings _settings;
   final List<String> _languages = [
     'English',
-    'Spanish',
-    'French',
-    'German',
-    'Chinese',
-    'Japanese',
-    'Korean',
-    'Arabic',
-    'Hindi',
-    'Portuguese',
+    'Khmer',
   ];
 
   @override
@@ -43,16 +37,18 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
-        title: const Text(
+        title: Text(
           'Language',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.purple,
+            color: themeProvider.accentColor,
           ),
         ),
       ),
@@ -80,7 +76,7 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.purple : Colors.grey[100],
+                  color: isSelected ? themeProvider.accentColor : Colors.grey[100],
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -97,18 +93,18 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
                 language,
                 style: TextStyle(
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? Colors.purple : Colors.black87,
+                  color: isSelected ? themeProvider.accentColor : Colors.black87,
                 ),
               ),
               trailing: isSelected
-                  ? const Icon(Icons.check_circle, color: Colors.purple)
+                  ? Icon(Icons.check_circle, color: themeProvider.accentColor)
                   : null,
               onTap: () {
                 _updateSettings(_settings.copyWith(language: language));
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Language changed to $language'),
-                    backgroundColor: Colors.purple,
+                    backgroundColor: themeProvider.accentColor,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

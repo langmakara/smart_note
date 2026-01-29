@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/theme_provider.dart';
 
 class NotificationTile extends StatelessWidget {
   final String title;
@@ -24,6 +26,8 @@ class NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
@@ -31,7 +35,7 @@ class NotificationTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isRead ? Colors.white : Colors.purple.withOpacity(0.05),
+          color: isRead ? Colors.white : themeProvider.accentColor.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
           border: isRead ? Border.all(color: Colors.grey[200]!) : null,
           boxShadow: isRead

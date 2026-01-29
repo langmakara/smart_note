@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/app_settings_model.dart';
+import '../../../providers/theme_provider.dart';
 
 class NotificationSettingsPage extends StatefulWidget {
   final AppSettings settings;
@@ -45,16 +47,18 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
-        title: const Text(
+        title: Text(
           'Notification Settings',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.purple,
+            color: themeProvider.accentColor,
           ),
         ),
       ),
@@ -79,7 +83,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
               children: [
                 Icon(
                   _settings.notificationsEnabled ? Icons.notifications_active : Icons.notifications_off,
-                  color: _settings.notificationsEnabled ? Colors.purple : Colors.grey,
+                  color: _settings.notificationsEnabled ? themeProvider.accentColor : Colors.grey,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -108,7 +112,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                   onChanged: (value) {
                     _updateSettings(_settings.copyWith(notificationsEnabled: value));
                   },
-                  activeColor: Colors.purple,
+                  activeColor: themeProvider.accentColor,
                 ),
               ],
             ),
@@ -154,7 +158,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                       onChanged: (value) {
                         _updateSettings(_settings.copyWith(eventReminders: value));
                       },
-                      activeColor: Colors.purple,
+                      activeColor: themeProvider.accentColor,
                     ),
                   ),
                   const Divider(height: 1),
@@ -171,7 +175,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                       onChanged: (value) {
                         _updateSettings(_settings.copyWith(noteReminders: value));
                       },
-                      activeColor: Colors.purple,
+                      activeColor: themeProvider.accentColor,
                     ),
                   ),
                 ],
@@ -206,19 +210,19 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                   const SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.access_time, color: Colors.purple),
+                    leading: Icon(Icons.access_time, color: themeProvider.accentColor),
                     title: const Text('Reminder Time'),
                     trailing: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.purple.withOpacity(0.1),
+                        color: themeProvider.accentColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         _settings.reminderTime,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.purple,
+                          color: themeProvider.accentColor,
                         ),
                       ),
                     ),

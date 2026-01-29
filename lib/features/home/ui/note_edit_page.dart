@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/note_model.dart';
+import '../../../providers/theme_provider.dart';
 
 class NoteEditPage extends StatefulWidget {
   final Note? note;
@@ -68,6 +70,7 @@ class _NoteEditPageState extends State<NoteEditPage> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.note != null;
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -76,14 +79,14 @@ class _NoteEditPageState extends State<NoteEditPage> {
         elevation: 1,
         title: Text(
           isEditing ? 'Edit Note' : 'New Note',
-          style: const TextStyle(
-            color: Colors.purple,
+          style: TextStyle(
+            color: themeProvider.accentColor,
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save, color: Colors.purple),
+            icon: Icon(Icons.save, color: themeProvider.accentColor),
             onPressed: _saveNote,
           ),
         ],
@@ -257,7 +260,7 @@ class _NoteEditPageState extends State<NoteEditPage> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: _selectedColor,
         onPressed: _saveNote,
-        child: const Icon(Icons.save, color: Colors.white),
+        child: Icon(Icons.save, color: Colors.white),
       ),
     );
   }

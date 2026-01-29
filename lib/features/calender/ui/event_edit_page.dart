@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/event_model.dart';
+import '../../../providers/theme_provider.dart';
 
 class EventEditPage extends StatefulWidget {
   final Event? event;
@@ -153,6 +155,8 @@ class _EventEditPageState extends State<EventEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -160,9 +164,9 @@ class _EventEditPageState extends State<EventEditPage> {
         elevation: 1,
         title: Text(
           widget.event != null ? 'Edit Event' : 'Add Event',
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.purple,
+            color: themeProvider.accentColor,
           ),
         ),
         actions: [
@@ -230,7 +234,7 @@ class _EventEditPageState extends State<EventEditPage> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.access_time, color: Colors.purple),
+                    Icon(Icons.access_time, color: themeProvider.accentColor),
                     const SizedBox(width: 12),
                     const Text(
                       'All Day Event',
@@ -245,7 +249,7 @@ class _EventEditPageState extends State<EventEditPage> {
                       onChanged: (value) {
                         setState(() => _isAllDay = value);
                       },
-                      activeColor: Colors.purple,
+                      activeColor: themeProvider.accentColor,
                     ),
                   ],
                 ),
@@ -388,7 +392,7 @@ class _EventEditPageState extends State<EventEditPage> {
                 child: ElevatedButton(
                   onPressed: _saveEvent,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
+                    backgroundColor: themeProvider.accentColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -420,6 +424,8 @@ class _EventEditPageState extends State<EventEditPage> {
     int maxLines = 1,
     String? Function(String?)? validator,
   }) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -439,11 +445,11 @@ class _EventEditPageState extends State<EventEditPage> {
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          prefixIcon: Icon(icon, color: Colors.purple),
+          prefixIcon: Icon(icon, color: themeProvider.accentColor),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
-          labelStyle: const TextStyle(color: Colors.purple),
+          labelStyle: TextStyle(color: themeProvider.accentColor),
         ),
         validator: validator,
       ),
@@ -456,6 +462,8 @@ class _EventEditPageState extends State<EventEditPage> {
     required IconData icon,
     required VoidCallback onTap,
   }) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Material(
       color: Colors.grey[50],
       borderRadius: BorderRadius.circular(8),
@@ -470,7 +478,7 @@ class _EventEditPageState extends State<EventEditPage> {
           ),
           child: Column(
             children: [
-              Icon(icon, size: 16, color: Colors.purple),
+              Icon(icon, size: 16, color: themeProvider.accentColor),
               const SizedBox(height: 4),
               Text(
                 label,

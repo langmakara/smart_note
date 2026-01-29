@@ -104,11 +104,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
       appBar: AppBar(
         backgroundColor: themeProvider.appBarColor,
         elevation: 1,
-        title: const Text(
+        title: Text(
           "Notifications",
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.purple,
+            color: themeProvider.accentColor,
           ),
         ),
         centerTitle: true,
@@ -116,10 +116,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
           if (_notifications.any((n) => !n["isRead"]))
             TextButton(
               onPressed: _markAllAsRead,
-              child: const Text(
+              child: Text(
                 "Mark all as read",
                 style: TextStyle(
-                  color: Colors.purple,
+                  color: themeProvider.accentColor,
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                 ),

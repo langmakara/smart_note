@@ -67,20 +67,20 @@ class CalendarGrid extends StatelessWidget {
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: isSelected
-                  ? Colors.purple
+                  ? themeProvider.accentColor
                   : isToday
                       ? Colors.blueAccent.withValues(alpha: 0.15)
                       : themeProvider.searchFillColor,
               borderRadius: BorderRadius.circular(10),
               border: isSelected
-                  ? Border.all(color: Colors.purple, width: 2)
+                  ? Border.all(color: themeProvider.accentColor, width: 2)
                   : isToday
                       ? Border.all(color: Colors.blueAccent.withValues(alpha: 0.5), width: 1.5)
                       : Border.all(color: themeProvider.dividerColor, width: 0.5),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: Colors.purple.withValues(alpha: 0.25),
+                        color: themeProvider.accentColor.withValues(alpha: 0.25),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),

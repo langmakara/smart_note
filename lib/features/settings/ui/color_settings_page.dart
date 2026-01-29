@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/app_settings_model.dart';
+import '../../../providers/theme_provider.dart';
 
 class ColorSettingsPage extends StatefulWidget {
   final AppSettings settings;
@@ -42,6 +44,9 @@ class _ColorSettingsPageState extends State<ColorSettingsPage> {
   void _updateSettings(AppSettings newSettings) {
     setState(() => _settings = newSettings);
     widget.onSettingsChanged(newSettings);
+    // Update the ThemeProvider with the new accent color
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    themeProvider.setAccentColor(newSettings.accentColor);
   }
 
   @override

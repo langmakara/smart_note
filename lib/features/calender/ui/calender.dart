@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/event_model.dart';
 import '../../../providers/theme_provider.dart';
+import '../../../services/event_storage.dart';
 import '../widget/calendar_grid.dart';
 import 'event_edit_page.dart';
 import 'events_list_page.dart';
@@ -21,48 +22,16 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   void initState() {
     super.initState();
-    _loadSampleEvents();
+    _loadEvents();
   }
 
-  // Sample events for demonstration
-  void _loadSampleEvents() {
-    final now = DateTime.now();
-    _events = [
-      Event(
-        id: '1',
-        title: 'Team Meeting',
-        description: 'Weekly team sync',
-        startTime: DateTime(now.year, now.month, now.day, 10, 0),
-        endTime: DateTime(now.year, now.month, now.day, 11, 0),
-        color: Colors.blue,
-        location: 'Conference Room A',
-      ),
-      Event(
-        id: '4',
-        title: 'Planning Meeting',
-        description: 'Sprint planning session',
-        startTime: DateTime(now.year, now.month, now.day, 10, 0),
-        endTime: DateTime(now.year, now.month, now.day, 11, 0),
-        color: Colors.purple,
-        location: 'Conference Room B',
-      ),
-      Event(
-        id: '2',
-        title: 'Lunch Break',
-        description: 'Team lunch',
-        startTime: DateTime(now.year, now.month, now.day + 1, 12, 0),
-        endTime: DateTime(now.year, now.month, now.day + 1, 13, 0),
-        color: Colors.green,
-      ),
-      Event(
-        id: '3',
-        title: 'Project Deadline',
-        description: 'Submit final report',
-        startTime: DateTime(now.year, now.month, now.day + 3, 17, 0),
-        endTime: DateTime(now.year, now.month, now.day + 3, 18, 0),
-        color: Colors.orange,
-      ),
-    ];
+  Future<void> _loadEvents() async {
+    final events = await EventStorage.instance.readAllEvents();
+    if (mounted) {
+      setState(() {
+        _events = events;
+      });
+    }
   }
 
   static const List<String> _monthNames = [
@@ -123,10 +92,12 @@ class _CalendarPageState extends State<CalendarPage> {
         builder: (context) => EventsListPage(
           events: _events,
           selectedDate: _selectedDate,
-          onAddEvent: (event) {
+          onAddEvent: (event) async {
+            await EventStorage.instance.create(event);
             setState(() => _events.add(event));
           },
-          onEditEvent: (event) {
+          onEditEvent: (event) async {
+            await EventStorage.instance.update(event);
             setState(() {
               final index = _events.indexWhere((e) => e.id == event.id);
               if (index != -1) {
@@ -134,7 +105,8 @@ class _CalendarPageState extends State<CalendarPage> {
               }
             });
           },
-          onDeleteEvent: (eventId) {
+          onDeleteEvent: (eventId) async {
+            await EventStorage.instance.delete(eventId);
             setState(() {
               _events.removeWhere((e) => e.id == eventId);
             });
@@ -155,19 +127,19 @@ class _CalendarPageState extends State<CalendarPage> {
         elevation: 1,
         title: Text(
           '${_monthNames[_focusedMonth.month - 1]} ${_focusedMonth.year}',
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.purple,
+            color: themeProvider.accentColor,
           ),
         ),
         centerTitle: true,
         actions: [
           TextButton(
             onPressed: _goToToday,
-            child: const Text(
+            child: Text(
               'Today',
               style: TextStyle(
-                color: Colors.purple,
+                color: themeProvider.accentColor,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -250,7 +222,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.purple,
+                      color: themeProvider.accentColor,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: _buildQuickAction(
@@ -265,7 +237,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.purple,
+                      color: themeProvider.accentColor,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: _buildQuickAction(

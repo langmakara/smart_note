@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/app_settings_model.dart';
+import '../../../providers/theme_provider.dart';
 
 class DataManagementPage extends StatefulWidget {
   final AppSettings settings;
@@ -103,16 +105,18 @@ class _DataManagementPageState extends State<DataManagementPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
-        title: const Text(
+        title: Text(
           'Data Management',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.purple,
+            color: themeProvider.accentColor,
           ),
         ),
       ),
@@ -269,7 +273,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
                   label: 'Total Size',
                   value: '2.4 MB',
                   icon: Icons.storage,
-                  color: Colors.purple,
+                  color: themeProvider.accentColor,
                 ),
               ],
             ),

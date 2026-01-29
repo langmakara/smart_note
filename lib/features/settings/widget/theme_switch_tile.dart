@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/theme_provider.dart';
 
 class ThemeSwitchTile extends StatelessWidget {
   final bool isDarkMode;
@@ -12,15 +14,17 @@ class ThemeSwitchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return ListTile(
       leading: Icon(
         isDarkMode ? Icons.dark_mode : Icons.light_mode,
-        color: Colors.purple,
+        color: themeProvider.accentColor,
       ),
       title: const Text("Dark Mode"),
       trailing: Switch(
         value: isDarkMode,
-        activeColor: Colors.purple,
+        activeColor: themeProvider.accentColor,
         onChanged: onThemeChanged,
       ),
     );

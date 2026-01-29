@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../widget/note_card.dart';
 import '../../../models/note_model.dart';
 import '../../../providers/theme_provider.dart';
-import '../../../services/note_database.dart';
+import '../../../services/note_storage.dart';
 import 'note_edit_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
     setState(() => _isLoading = true);
     
     try {
-      final notes = await NoteDatabase.instance.readAllNotes();
+      final notes = await NoteStorage.instance.readAllNotes();
       if (!mounted) return;
       setState(() {
         _notes.clear();
@@ -69,7 +69,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (result != null && mounted) {
-      await NoteDatabase.instance.create(result);
+      await NoteStorage.instance.create(result);
       setState(() {
         _notes.insert(0, result);
       });
@@ -102,7 +102,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (result != null && mounted) {
-      await NoteDatabase.instance.update(result);
+      await NoteStorage.instance.update(result);
       setState(() {
         final index = _notes.indexWhere((n) => n.id == note.id);
         if (index != -1) {
@@ -131,7 +131,7 @@ class _HomePageState extends State<HomePage> {
           ),
           TextButton(
             onPressed: () async {
-              await NoteDatabase.instance.delete(noteId);
+              await NoteStorage.instance.delete(noteId);
               setState(() {
                 _notes.removeWhere((note) => note.id == noteId);
               });
@@ -168,10 +168,10 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: themeProvider.appBarColor,
-        title: const Text(
+        title: Text(
           "Smart Notes",
           style: TextStyle(
-            color: Colors.purple,
+            color: themeProvider.accentColor,
             fontWeight: FontWeight.bold,
             fontSize: 22,
           ),
@@ -268,17 +268,17 @@ class _HomePageState extends State<HomePage> {
                               color: themeProvider.textColor,
                             ),
                           ),
-                          if (_searchQuery.isEmpty)
-                            TextButton(
-                              onPressed: () {},
-                              child: const Text(
-                                "View All",
-                                style: TextStyle(
-                                  color: Colors.purple,
-                                  fontWeight: FontWeight.w600,
+                            if (_searchQuery.isEmpty)
+                              TextButton(
+                                onPressed: () {},
+                                child: Text(
+                                  "View All",
+                                  style: TextStyle(
+                                    color: themeProvider.accentColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
-                            ),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -306,7 +306,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.purple,
+        backgroundColor: themeProvider.accentColor,
         elevation: 4,
         onPressed: _addNote,
         child: const Icon(Icons.add, color: Colors.white, size: 28),
