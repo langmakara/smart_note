@@ -1,63 +1,50 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import '../models/note_model.dart';
+import '../repositories/note_repository.dart';
+import '../services/data_migration_service.dart';
+import '../services/database_helper.dart';
 
 class NoteStorage {
   static final NoteStorage instance = NoteStorage._init();
   NoteStorage._init();
 
-  Future<File> get _localFile async {
-    final directory = await getApplicationDocumentsDirectory();
-    final path = '${directory.path}/notes.json';
-    return File(path);
+  // Initialize storage and migrate data if needed
+  Future<void> initialize() async {
+    final migrationService = DataMigrationService.instance;
+    
+    if (await migrationService.isMigrationNeeded()) {
+      await migrationService.migrate();
+    }
   }
 
   Future<List<Note>> readAllNotes() async {
     try {
-      final file = await _localFile;
-      if (!await file.exists()) {
-        return [];
-      }
-      final contents = await file.readAsString();
-      if (contents.isEmpty) {
-        return [];
-      }
-      final List<dynamic> jsonList = json.decode(contents);
-      return jsonList.map((json) => Note.fromJson(json)).toList();
+      return await NoteRepository.instance.getAll();
     } catch (e) {
       return [];
     }
   }
 
   Future<void> saveNotes(List<Note> notes) async {
-    final file = await _localFile;
-    final jsonList = notes.map((note) => note.toJson()).toList();
-    await file.writeAsString(json.encode(jsonList));
-  }
-
-  Future<void> create(Note note) async {
-    final notes = await readAllNotes();
-    notes.add(note);
-    await saveNotes(notes);
-  }
-
-  Future<void> update(Note updatedNote) async {
-    final notes = await readAllNotes();
-    final index = notes.indexWhere((note) => note.id == updatedNote.id);
-    if (index != -1) {
-      notes[index] = updatedNote;
-      await saveNotes(notes);
+    // Note: This method is kept for compatibility but should not be used
+    // Individual operations (create, update, delete) are preferred
+    for (var note in notes) {
+      await NoteRepository.instance.update(note);
     }
   }
 
+  Future<void> create(Note note) async {
+    await NoteRepository.instance.create(note);
+  }
+
+  Future<void> update(Note updatedNote) async {
+    await NoteRepository.instance.update(updatedNote);
+  }
+
   Future<void> delete(String id) async {
-    final notes = await readAllNotes();
-    notes.removeWhere((note) => note.id == id);
-    await saveNotes(notes);
+    await NoteRepository.instance.delete(id);
   }
 
   Future<void> close() async {
-    // No cleanup needed for JSON file storage
+    await DatabaseHelper.instance.close();
   }
 }

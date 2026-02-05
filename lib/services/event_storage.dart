@@ -1,63 +1,50 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import '../models/event_model.dart';
+import '../repositories/event_repository.dart';
+import '../services/data_migration_service.dart';
+import '../services/database_helper.dart';
 
 class EventStorage {
   static final EventStorage instance = EventStorage._init();
   EventStorage._init();
 
-  Future<File> get _localFile async {
-    final directory = await getApplicationDocumentsDirectory();
-    final path = '${directory.path}/events.json';
-    return File(path);
+  // Initialize storage and migrate data if needed
+  Future<void> initialize() async {
+    final migrationService = DataMigrationService.instance;
+    
+    if (await migrationService.isMigrationNeeded()) {
+      await migrationService.migrate();
+    }
   }
 
   Future<List<Event>> readAllEvents() async {
     try {
-      final file = await _localFile;
-      if (!await file.exists()) {
-        return [];
-      }
-      final contents = await file.readAsString();
-      if (contents.isEmpty) {
-        return [];
-      }
-      final List<dynamic> jsonList = json.decode(contents);
-      return jsonList.map((json) => Event.fromJson(json)).toList();
+      return await EventRepository.instance.getAll();
     } catch (e) {
       return [];
     }
   }
 
   Future<void> saveEvents(List<Event> events) async {
-    final file = await _localFile;
-    final jsonList = events.map((event) => event.toJson()).toList();
-    await file.writeAsString(json.encode(jsonList));
-  }
-
-  Future<void> create(Event event) async {
-    final events = await readAllEvents();
-    events.add(event);
-    await saveEvents(events);
-  }
-
-  Future<void> update(Event updatedEvent) async {
-    final events = await readAllEvents();
-    final index = events.indexWhere((event) => event.id == updatedEvent.id);
-    if (index != -1) {
-      events[index] = updatedEvent;
-      await saveEvents(events);
+    // Note: This method is kept for compatibility but should not be used
+    // Individual operations (create, update, delete) are preferred
+    for (var event in events) {
+      await EventRepository.instance.update(event);
     }
   }
 
+  Future<void> create(Event event) async {
+    await EventRepository.instance.create(event);
+  }
+
+  Future<void> update(Event updatedEvent) async {
+    await EventRepository.instance.update(updatedEvent);
+  }
+
   Future<void> delete(String id) async {
-    final events = await readAllEvents();
-    events.removeWhere((event) => event.id == id);
-    await saveEvents(events);
+    await EventRepository.instance.delete(id);
   }
 
   Future<void> close() async {
-    // No cleanup needed for JSON file storage
+    await DatabaseHelper.instance.close();
   }
 }

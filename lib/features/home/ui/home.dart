@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadNotes() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final notes = await NoteStorage.instance.readAllNotes();
       if (!mounted) return;
@@ -162,7 +162,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
@@ -197,7 +197,10 @@ class _HomePageState extends State<HomePage> {
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search notes...',
-                prefixIcon: Icon(Icons.search, color: themeProvider.subtitleColor),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: themeProvider.subtitleColor,
+                ),
                 filled: true,
                 fillColor: themeProvider.searchFillColor,
                 border: OutlineInputBorder(
@@ -219,92 +222,92 @@ class _HomePageState extends State<HomePage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _filteredNotes.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.note_alt_outlined,
+                    size: 80,
+                    color: themeProvider.subtitleColor.withOpacity(0.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _searchQuery.isNotEmpty ? 'No notes found' : 'No notes yet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: themeProvider.subtitleColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _searchQuery.isNotEmpty
+                        ? 'Try a different search term'
+                        : 'Tap + to create your first note',
+                    style: TextStyle(
+                      color: themeProvider.subtitleColor.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        Icons.note_alt_outlined,
-                        size: 80,
-                        color: themeProvider.subtitleColor.withOpacity(0.5),
-                      ),
-                      const SizedBox(height: 16),
                       Text(
                         _searchQuery.isNotEmpty
-                            ? 'No notes found'
-                            : 'No notes yet',
+                            ? 'Search Results (${_filteredNotes.length})'
+                            : 'Recent Notes (${_filteredNotes.length})',
                         style: TextStyle(
-                          fontSize: 18,
-                          color: themeProvider.subtitleColor,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: themeProvider.textColor,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _searchQuery.isNotEmpty
-                            ? 'Try a different search term'
-                            : 'Tap + to create your first note',
-                        style: TextStyle(color: themeProvider.subtitleColor.withOpacity(0.7)),
-                      ),
-                    ],
-                  ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _searchQuery.isNotEmpty
-                                ? 'Search Results (${_filteredNotes.length})'
-                                : 'Recent Notes (${_filteredNotes.length})',
+                      if (_searchQuery.isEmpty)
+                        TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            "View All",
                             style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: themeProvider.textColor,
+                              color: themeProvider.accentColor,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                            if (_searchQuery.isEmpty)
-                              TextButton(
-                                onPressed: () {},
-                                child: Text(
-                                  "View All",
-                                  style: TextStyle(
-                                    color: themeProvider.accentColor,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: GridView.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
                             childAspectRatio: 0.85,
                           ),
-                          itemCount: _filteredNotes.length,
-                          itemBuilder: (context, index) {
-                            final note = _filteredNotes[index];
-                            return NoteCard(
-                              note: note,
-                              onTap: () => _editNote(note),
-                              onDelete: () => _deleteNote(note.id),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                      itemCount: _filteredNotes.length,
+                      itemBuilder: (context, index) {
+                        final note = _filteredNotes[index];
+                        return NoteCard(
+                          note: note,
+                          onTap: () => _editNote(note),
+                          onDelete: () => _deleteNote(note.id),
+                        );
+                      },
+                    ),
                   ),
-                ),
+                ],
+              ),
+            ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: themeProvider.accentColor,
         elevation: 4,
