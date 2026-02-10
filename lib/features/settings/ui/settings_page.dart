@@ -7,6 +7,7 @@ import 'color_settings_page.dart';
 import 'language_settings_page.dart';
 import 'notification_settings_page.dart';
 import 'data_management_page.dart';
+import 'security_settings_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -185,6 +186,33 @@ class _SettingsPageState extends State<SettingsPage> {
                           themeProvider.updateSettings(newSettings);
                         },
                       ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Security Section
+          _buildSection(
+            title: "Security",
+            themeProvider: themeProvider,
+            children: [
+              ListTile(
+                leading: Icon(Icons.lock, color: themeProvider.accentColor),
+                title: Text(
+                  "Numeric Password",
+                  style: TextStyle(color: themeProvider.textColor),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: themeProvider.subtitleColor,
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SecuritySettingsPage(),
                     ),
                   );
                 },
