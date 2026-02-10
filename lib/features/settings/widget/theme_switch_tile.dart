@@ -24,7 +24,7 @@ class ThemeSwitchTile extends StatelessWidget {
       title: const Text("Dark Mode"),
       trailing: Switch(
         value: isDarkMode,
-        activeColor: themeProvider.accentColor,
+        activeThumbColor: themeProvider.accentColor,
         onChanged: onThemeChanged,
       ),
     );

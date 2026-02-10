@@ -7,11 +7,7 @@ class NoteEditPage extends StatefulWidget {
   final Note? note;
   final Note Function(String title, String content, Color color) onSave;
 
-  const NoteEditPage({
-    super.key,
-    this.note,
-    required this.onSave,
-  });
+  const NoteEditPage({super.key, this.note, required this.onSave});
 
   @override
   State<NoteEditPage> createState() => _NoteEditPageState();
@@ -36,7 +32,9 @@ class _NoteEditPageState extends State<NoteEditPage> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.note?.title ?? '');
-    _contentController = TextEditingController(text: widget.note?.content ?? '');
+    _contentController = TextEditingController(
+      text: widget.note?.content ?? '',
+    );
     _selectedColor = widget.note?.color ?? Colors.purple;
   }
 
@@ -73,9 +71,9 @@ class _NoteEditPageState extends State<NoteEditPage> {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: themeProvider.appBarColor,
         elevation: 1,
         title: Text(
           isEditing ? 'Edit Note' : 'New Note',
@@ -97,15 +95,14 @@ class _NoteEditPageState extends State<NoteEditPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Color Selection
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: themeProvider.cardColor,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: themeProvider.shadowColor,
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -114,12 +111,12 @@ class _NoteEditPageState extends State<NoteEditPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Note Color',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: Colors.black87,
+                        color: themeProvider.textColor,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -140,15 +137,12 @@ class _NoteEditPageState extends State<NoteEditPage> {
                               color: color,
                               shape: BoxShape.circle,
                               border: isSelected
-                                  ? Border.all(
-                                      color: Colors.white,
-                                      width: 3,
-                                    )
+                                  ? Border.all(color: Colors.white, width: 3)
                                   : null,
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
-                                        color: color.withOpacity(0.4),
+                                        color: color.withValues(alpha: 0.4),
                                         blurRadius: 8,
                                         spreadRadius: 2,
                                       ),
@@ -163,15 +157,14 @@ class _NoteEditPageState extends State<NoteEditPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Title Input
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: themeProvider.cardColor,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: themeProvider.shadowColor,
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -179,32 +172,32 @@ class _NoteEditPageState extends State<NoteEditPage> {
                 ),
                 child: TextField(
                   controller: _titleController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Note Title',
                     border: InputBorder.none,
                     hintStyle: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey,
+                      color: themeProvider.subtitleColor,
                     ),
                   ),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
+                    color: themeProvider.textColor,
                   ),
                   maxLines: 1,
                 ),
               ),
               const SizedBox(height: 12),
-              // Content Input
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: themeProvider.cardColor,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: themeProvider.shadowColor,
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -212,40 +205,44 @@ class _NoteEditPageState extends State<NoteEditPage> {
                 ),
                 child: TextField(
                   controller: _contentController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Write your note here...',
                     border: InputBorder.none,
                     hintStyle: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey,
+                      color: themeProvider.subtitleColor,
                     ),
                   ),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     height: 1.5,
+                    color: themeProvider.textColor,
                   ),
                   maxLines: 15,
                   textAlignVertical: TextAlignVertical.top,
                 ),
               ),
               const SizedBox(height: 16),
-              // Info
               if (widget.note != null)
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: themeProvider.cardColor.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.grey[600], size: 18),
+                      Icon(
+                        Icons.info_outline,
+                        color: themeProvider.subtitleColor,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Created: ${_formatDate(widget.note!.createdAt)}',
                           style: TextStyle(
-                            color: Colors.grey[700],
+                            color: themeProvider.subtitleColor,
                             fontSize: 12,
                           ),
                         ),
@@ -260,7 +257,7 @@ class _NoteEditPageState extends State<NoteEditPage> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: _selectedColor,
         onPressed: _saveNote,
-        child: Icon(Icons.save, color: Colors.white),
+        child: const Icon(Icons.save, color: Colors.white),
       ),
     );
   }

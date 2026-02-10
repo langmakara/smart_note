@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widget/note_card.dart';
+import '../widget/todo_card.dart';
 import '../../../models/note_model.dart';
+import '../../../models/todo_model.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../services/note_storage.dart';
+import '../../../services/todo_storage.dart';
 import 'note_edit_page.dart';
+import 'todo_edit_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,30 +19,35 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final List<Note> _notes = [];
+  final List<Todo> _todos = [];
   String _searchQuery = '';
   bool _isLoading = false;
+  String _selectedType = 'all';
 
   @override
   void initState() {
     super.initState();
-    _loadNotes();
+    _loadData();
   }
 
-  Future<void> _loadNotes() async {
+  Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
     try {
       final notes = await NoteStorage.instance.readAllNotes();
+      final todos = await TodoStorage.instance.readAllTodos();
       if (!mounted) return;
       setState(() {
         _notes.clear();
         _notes.addAll(notes);
+        _todos.clear();
+        _todos.addAll(todos);
       });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error loading notes: $e'),
+          content: Text('Error loading data: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -47,6 +56,92 @@ class _HomePageState extends State<HomePage> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _showAddOptions() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: themeProvider.cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Create New',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: themeProvider.textColor,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildOptionButton(
+                  icon: Icons.note_alt,
+                  label: 'Note',
+                  color: Colors.purple,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _addNote();
+                  },
+                ),
+                _buildOptionButton(
+                  icon: Icons.check_circle,
+                  label: 'To-Do',
+                  color: Colors.blue,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _addTodo();
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, size: 32, color: color),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: themeProvider.textColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _addNote() async {
@@ -73,12 +168,49 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _notes.insert(0, result);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Note created!'),
-          backgroundColor: Colors.green,
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Note created!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _addTodo() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TodoEditPage(
+          onSave: (title, description, color) {
+            final newTodo = Todo(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              title: title,
+              description: description,
+              createdAt: DateTime.now(),
+              color: color,
+            );
+            return newTodo;
+          },
         ),
-      );
+      ),
+    );
+
+    if (result != null && mounted) {
+      await TodoStorage.instance.create(result);
+      setState(() {
+        _todos.insert(0, result);
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('To-Do created!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     }
   }
 
@@ -109,12 +241,52 @@ class _HomePageState extends State<HomePage> {
           _notes[index] = result;
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Note updated!'),
-          backgroundColor: Colors.green,
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Note updated!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _editTodo(Todo todo) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TodoEditPage(
+          todo: todo,
+          onSave: (title, description, color) {
+            final updatedTodo = todo.copyWith(
+              title: title,
+              description: description,
+              color: color,
+              updatedAt: DateTime.now(),
+            );
+            return updatedTodo;
+          },
         ),
-      );
+      ),
+    );
+
+    if (result != null && mounted) {
+      await TodoStorage.instance.update(result);
+      setState(() {
+        final index = _todos.indexWhere((t) => t.id == todo.id);
+        if (index != -1) {
+          _todos[index] = result;
+        }
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('To-Do updated!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     }
   }
 
@@ -131,12 +303,16 @@ class _HomePageState extends State<HomePage> {
           ),
           TextButton(
             onPressed: () async {
+              final dialogContext = context;
               await NoteStorage.instance.delete(noteId);
               setState(() {
                 _notes.removeWhere((note) => note.id == noteId);
               });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
+              if (!mounted) return;
+              // ignore: use_build_context_synchronously
+              Navigator.pop(dialogContext);
+              // ignore: use_build_context_synchronously
+              ScaffoldMessenger.of(dialogContext).showSnackBar(
                 const SnackBar(
                   content: Text("Note deleted"),
                   backgroundColor: Colors.red,
@@ -150,13 +326,275 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<Note> get _filteredNotes {
-    if (_searchQuery.isEmpty) return _notes;
-    return _notes.where((note) {
-      final query = _searchQuery.toLowerCase();
-      return note.title.toLowerCase().contains(query) ||
-          note.content.toLowerCase().contains(query);
+  void _viewNote(Note note) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      isScrollControlled: true,
+      builder: (context) => _buildNoteViewSheet(note),
+    );
+  }
+
+  Widget _buildNoteViewSheet(Note note) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  note.title.isEmpty ? "Untitled" : note.title,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: note.color,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(Icons.close, color: themeProvider.subtitleColor),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Text(
+              note.content.isEmpty ? "No content" : note.content,
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.6,
+                color: themeProvider.textColor,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _editNote(note);
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Edit'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: themeProvider.accentColor,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _deleteNote(note.id);
+                },
+                icon: const Icon(Icons.delete, color: Colors.red),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteTodo(String todoId) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete To-Do"),
+        content: const Text("Are you sure you want to delete this to-do?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () async {
+              final dialogContext = context;
+              await TodoStorage.instance.delete(todoId);
+              setState(() {
+                _todos.removeWhere((todo) => todo.id == todoId);
+              });
+              if (!mounted) return;
+              // ignore: use_build_context_synchronously
+              Navigator.pop(dialogContext);
+              // ignore: use_build_context_synchronously
+              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                const SnackBar(
+                  content: Text("To-Do deleted"),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<dynamic> get _filteredItems {
+    List<dynamic> items = [];
+
+    if (_selectedType == 'all' || _selectedType == 'notes') {
+      items.addAll(_notes);
+    }
+    if (_selectedType == 'all' || _selectedType == 'todos') {
+      items.addAll(_todos);
+    }
+
+    if (_searchQuery.isEmpty) return items;
+    return items.where((item) {
+      if (item is Note) {
+        return item.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            item.content.toLowerCase().contains(_searchQuery.toLowerCase());
+      } else if (item is Todo) {
+        return item.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            item.description.toLowerCase().contains(_searchQuery.toLowerCase());
+      }
+      return false;
     }).toList();
+  }
+
+  int get _totalCount {
+    if (_selectedType == 'notes') return _notes.length;
+    if (_selectedType == 'todos') return _todos.length;
+    return _notes.length + _todos.length;
+  }
+
+  void _viewTodo(Todo todo) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      isScrollControlled: true,
+      builder: (context) => _buildTodoViewSheet(todo),
+    );
+  }
+
+  Widget _buildTodoViewSheet(Todo todo) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  todo.title.isEmpty ? "Untitled" : todo.title,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: todo.isCompleted ? Colors.grey : todo.color,
+                    decoration: todo.isCompleted
+                        ? TextDecoration.lineThrough
+                        : null,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(Icons.close, color: themeProvider.subtitleColor),
+              ),
+            ],
+          ),
+          if (todo.description.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              todo.description,
+              style: TextStyle(fontSize: 16, color: themeProvider.textColor),
+            ),
+          ],
+          if (todo.items.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Text(
+              'Items (${todo.completedItems}/${todo.totalItems})',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: themeProvider.textColor,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...todo.items.map(
+              (item) => ListTile(
+                leading: Icon(
+                  item.isCompleted
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                  color: item.isCompleted
+                      ? Colors.green
+                      : themeProvider.subtitleColor,
+                ),
+                title: Text(
+                  item.text,
+                  style: TextStyle(
+                    color: item.isCompleted
+                        ? Colors.grey
+                        : themeProvider.textColor,
+                    decoration: item.isCompleted
+                        ? TextDecoration.lineThrough
+                        : null,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _editTodo(todo);
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Edit'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: themeProvider.accentColor,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _deleteTodo(todo.id);
+                },
+                icon: const Icon(Icons.delete, color: Colors.red),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleTodoDone(Todo todo) async {
+    final updatedTodo = todo.copyWith(
+      isCompleted: !todo.isCompleted,
+      updatedAt: DateTime.now(),
+    );
+    await TodoStorage.instance.update(updatedTodo);
+    setState(() {
+      final index = _todos.indexWhere((t) => t.id == todo.id);
+      if (index != -1) {
+        _todos[index] = updatedTodo;
+      }
+    });
   }
 
   @override
@@ -176,64 +614,75 @@ class _HomePageState extends State<HomePage> {
             fontSize: 22,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _searchQuery.isNotEmpty ? Icons.close : Icons.search,
-              color: themeProvider.subtitleColor,
-            ),
-            onPressed: () {
-              if (_searchQuery.isNotEmpty) {
-                setState(() => _searchQuery = '');
-              }
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search notes...',
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: themeProvider.subtitleColor,
-                ),
-                filled: true,
-                fillColor: themeProvider.searchFillColor,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
+          preferredSize: const Size.fromHeight(100),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 12,
+                  vertical: 8,
+                ),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search notes, to-dos...',
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: themeProvider.subtitleColor,
+                    ),
+                    filled: true,
+                    fillColor: themeProvider.searchFillColor,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() => _searchQuery = value);
+                  },
                 ),
               ),
-              onChanged: (value) {
-                setState(() => _searchQuery = value);
-              },
-            ),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                child: Row(
+                  children: [
+                    _buildTypeFilter('All', 'all'),
+                    const SizedBox(width: 8),
+                    _buildTypeFilter('Notes', 'notes'),
+                    const SizedBox(width: 8),
+                    _buildTypeFilter('To-Dos', 'todos'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _filteredNotes.isEmpty
+          : _filteredItems.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.note_alt_outlined,
+                    _getEmptyIcon(),
                     size: 80,
-                    color: themeProvider.subtitleColor.withOpacity(0.5),
+                    color: themeProvider.subtitleColor.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _searchQuery.isNotEmpty ? 'No notes found' : 'No notes yet',
+                    _searchQuery.isNotEmpty
+                        ? 'No results found'
+                        : 'Nothing yet',
                     style: TextStyle(
                       fontSize: 18,
                       color: themeProvider.subtitleColor,
@@ -244,9 +693,9 @@ class _HomePageState extends State<HomePage> {
                   Text(
                     _searchQuery.isNotEmpty
                         ? 'Try a different search term'
-                        : 'Tap + to create your first note',
+                        : 'Tap + to create your first item',
                     style: TextStyle(
-                      color: themeProvider.subtitleColor.withOpacity(0.7),
+                      color: themeProvider.subtitleColor.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -258,50 +707,45 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _searchQuery.isNotEmpty
-                            ? 'Search Results (${_filteredNotes.length})'
-                            : 'Recent Notes (${_filteredNotes.length})',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: themeProvider.textColor,
-                        ),
-                      ),
-                      if (_searchQuery.isEmpty)
-                        TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            "View All",
-                            style: TextStyle(
-                              color: themeProvider.accentColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                    ],
+                  Text(
+                    _searchQuery.isNotEmpty
+                        ? 'Results ($_totalCount)'
+                        : 'Recent ($_totalCount)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: themeProvider.textColor,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Expanded(
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 0.85,
-                          ),
-                      itemCount: _filteredNotes.length,
+                    child: ListView.builder(
+                      itemCount: _filteredItems.length,
                       itemBuilder: (context, index) {
-                        final note = _filteredNotes[index];
-                        return NoteCard(
-                          note: note,
-                          onTap: () => _editNote(note),
-                          onDelete: () => _deleteNote(note.id),
-                        );
+                        final item = _filteredItems[index];
+                        if (item is Note) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: NoteCard(
+                              note: item,
+                              onView: () => _viewNote(item),
+                              onEdit: () => _editNote(item),
+                              onDelete: () => _deleteNote(item.id),
+                            ),
+                          );
+                        } else if (item is Todo) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: TodoCard(
+                              todo: item,
+                              onView: () => _viewTodo(item),
+                              onEdit: () => _editTodo(item),
+                              onDelete: () => _deleteTodo(item.id),
+                              onToggleDone: () => _toggleTodoDone(item),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
                       },
                     ),
                   ),
@@ -311,9 +755,48 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: themeProvider.accentColor,
         elevation: 4,
-        onPressed: _addNote,
+        onPressed: _showAddOptions,
         child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
     );
+  }
+
+  Widget _buildTypeFilter(String label, String type) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isSelected = _selectedType == type;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() => _selectedType = type);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? themeProvider.accentColor
+              : themeProvider.cardColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? themeProvider.accentColor
+                : themeProvider.dividerColor,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isSelected ? Colors.white : themeProvider.textColor,
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getEmptyIcon() {
+    if (_selectedType == 'todos') return Icons.check_circle_outline;
+    if (_selectedType == 'notes') return Icons.note_alt_outlined;
+    return Icons.lightbulb_outline;
   }
 }

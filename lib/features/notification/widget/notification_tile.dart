@@ -27,7 +27,7 @@ class NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
@@ -35,13 +35,15 @@ class NotificationTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isRead ? Colors.white : themeProvider.accentColor.withOpacity(0.05),
+          color: isRead
+              ? themeProvider.cardColor
+              : themeProvider.accentColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: isRead ? Border.all(color: Colors.grey[200]!) : null,
+          border: isRead ? Border.all(color: themeProvider.dividerColor) : null,
           boxShadow: isRead
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: themeProvider.shadowColor,
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
@@ -52,7 +54,7 @@ class NotificationTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CircleAvatar(
-              backgroundColor: iconColor.withOpacity(0.1),
+              backgroundColor: iconColor.withValues(alpha: 0.1),
               child: Icon(icon, color: iconColor, size: 20),
             ),
             const SizedBox(width: 12),
@@ -65,14 +67,14 @@ class NotificationTile extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
                       fontSize: 15,
-                      color: isRead ? Colors.black87 : Colors.black,
+                      color: themeProvider.textColor,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
                     style: TextStyle(
-                      color: isRead ? Colors.grey[600] : Colors.grey[700],
+                      color: themeProvider.subtitleColor,
                       fontSize: 13,
                     ),
                   ),
@@ -80,7 +82,7 @@ class NotificationTile extends StatelessWidget {
                   Text(
                     time,
                     style: TextStyle(
-                      color: Colors.grey[500],
+                      color: themeProvider.subtitleColor.withValues(alpha: 0.7),
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                     ),

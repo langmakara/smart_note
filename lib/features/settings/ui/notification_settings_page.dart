@@ -14,7 +14,8 @@ class NotificationSettingsPage extends StatefulWidget {
   });
 
   @override
-  State<NotificationSettingsPage> createState() => _NotificationSettingsPageState();
+  State<NotificationSettingsPage> createState() =>
+      _NotificationSettingsPageState();
 }
 
 class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
@@ -40,7 +41,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
       ),
     );
     if (time != null) {
-      final timeString = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+      final timeString =
+          '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
       _updateSettings(_settings.copyWith(reminderTime: timeString));
     }
   }
@@ -48,11 +50,11 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: themeProvider.appBarColor,
         elevation: 1,
         title: Text(
           'Notification Settings',
@@ -69,11 +71,11 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: themeProvider.cardColor,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: themeProvider.shadowColor,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -82,26 +84,31 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
             child: Row(
               children: [
                 Icon(
-                  _settings.notificationsEnabled ? Icons.notifications_active : Icons.notifications_off,
-                  color: _settings.notificationsEnabled ? themeProvider.accentColor : Colors.grey,
+                  _settings.notificationsEnabled
+                      ? Icons.notifications_active
+                      : Icons.notifications_off,
+                  color: _settings.notificationsEnabled
+                      ? themeProvider.accentColor
+                      : themeProvider.subtitleColor,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Notifications',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: themeProvider.textColor,
                         ),
                       ),
                       Text(
                         _settings.notificationsEnabled ? 'Enabled' : 'Disabled',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey[600],
+                          color: themeProvider.subtitleColor,
                         ),
                       ),
                     ],
@@ -110,9 +117,11 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                 Switch(
                   value: _settings.notificationsEnabled,
                   onChanged: (value) {
-                    _updateSettings(_settings.copyWith(notificationsEnabled: value));
+                    _updateSettings(
+                      _settings.copyWith(notificationsEnabled: value),
+                    );
                   },
-                  activeColor: themeProvider.accentColor,
+                  activeThumbColor: themeProvider.accentColor,
                 ),
               ],
             ),
@@ -128,7 +137,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -139,43 +148,38 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                 children: [
                   const Text(
                     'Notification Types',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      Icons.event,
-                      color: Colors.green[700],
-                    ),
+                    leading: Icon(Icons.event, color: Colors.green[700]),
                     title: const Text('Event Reminders'),
                     subtitle: const Text('Get notified before events'),
                     trailing: Switch(
                       value: _settings.eventReminders,
                       onChanged: (value) {
-                        _updateSettings(_settings.copyWith(eventReminders: value));
+                        _updateSettings(
+                          _settings.copyWith(eventReminders: value),
+                        );
                       },
-                      activeColor: themeProvider.accentColor,
+                      activeThumbColor: themeProvider.accentColor,
                     ),
                   ),
                   const Divider(height: 1),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      Icons.note,
-                      color: Colors.blue[700],
-                    ),
+                    leading: Icon(Icons.note, color: Colors.blue[700]),
                     title: const Text('Note Reminders'),
                     subtitle: const Text('Reminders for pinned notes'),
                     trailing: Switch(
                       value: _settings.noteReminders,
                       onChanged: (value) {
-                        _updateSettings(_settings.copyWith(noteReminders: value));
+                        _updateSettings(
+                          _settings.copyWith(noteReminders: value),
+                        );
                       },
-                      activeColor: themeProvider.accentColor,
+                      activeThumbColor: themeProvider.accentColor,
                     ),
                   ),
                 ],
@@ -191,7 +195,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -202,20 +206,23 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                 children: [
                   const Text(
                     'Default Reminder Time',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.access_time, color: themeProvider.accentColor),
+                    leading: Icon(
+                      Icons.access_time,
+                      color: themeProvider.accentColor,
+                    ),
                     title: const Text('Reminder Time'),
                     trailing: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: themeProvider.accentColor.withOpacity(0.1),
+                        color: themeProvider.accentColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -241,7 +248,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -252,17 +259,17 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                 children: [
                   const Text(
                     'Sound & Vibration',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.volume_up, color: Colors.orange),
                     title: const Text('Notification Sound'),
-                    trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: Colors.grey,
+                    ),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -286,7 +293,11 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                       onChanged: (value) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(value ? 'Vibration enabled' : 'Vibration disabled'),
+                            content: Text(
+                              value
+                                  ? 'Vibration enabled'
+                                  : 'Vibration disabled',
+                            ),
                             backgroundColor: Colors.red,
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
@@ -295,7 +306,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                           ),
                         );
                       },
-                      activeColor: Colors.red,
+                      activeThumbColor: Colors.red,
                     ),
                   ),
                 ],

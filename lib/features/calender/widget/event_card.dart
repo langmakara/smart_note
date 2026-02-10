@@ -18,7 +18,7 @@ class EventCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -36,15 +36,11 @@ class EventCard extends StatelessWidget {
                 offset: const Offset(0, 2),
               ),
             ],
-            border: Border(
-              left: BorderSide(
-                color: event.color,
-                width: 4,
-              ),
-            ),
+            border: Border(left: BorderSide(color: event.color, width: 4)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [

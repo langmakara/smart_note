@@ -9,6 +9,7 @@ class Event {
   Color color;
   bool isAllDay;
   String? location;
+  int? reminderMinutes;
 
   Event({
     required this.id,
@@ -19,6 +20,7 @@ class Event {
     this.color = Colors.blue,
     this.isAllDay = false,
     this.location,
+    this.reminderMinutes,
   });
 
   Map<String, dynamic> toMap() {
@@ -28,9 +30,10 @@ class Event {
       'description': description,
       'startTime': startTime.toIso8601String(),
       'endTime': endTime.toIso8601String(),
-      'color': color.value,
+      'color': color.toARGB32(),
       'isAllDay': isAllDay,
       'location': location,
+      'reminderMinutes': reminderMinutes,
     };
   }
 
@@ -44,6 +47,7 @@ class Event {
       color: Color(map['color']),
       isAllDay: map['isAllDay'] ?? false,
       location: map['location'],
+      reminderMinutes: map['reminderMinutes'],
     );
   }
 
@@ -55,6 +59,7 @@ class Event {
     Color? color,
     bool? isAllDay,
     String? location,
+    int? reminderMinutes,
   }) {
     return Event(
       id: id,
@@ -65,6 +70,7 @@ class Event {
       color: color ?? this.color,
       isAllDay: isAllDay ?? this.isAllDay,
       location: location ?? this.location,
+      reminderMinutes: reminderMinutes ?? this.reminderMinutes,
     );
   }
 
@@ -81,9 +87,10 @@ class Event {
       'description': description,
       'startTime': startTime.toIso8601String(),
       'endTime': endTime.toIso8601String(),
-      'color': color.value,
+      'color': color.toARGB32(),
       'isAllDay': isAllDay,
       'location': location,
+      'reminderMinutes': reminderMinutes,
     };
   }
 
@@ -97,6 +104,7 @@ class Event {
       color: Color(json['color']),
       isAllDay: json['isAllDay'] ?? false,
       location: json['location'],
+      reminderMinutes: json['reminderMinutes'],
     );
   }
 }

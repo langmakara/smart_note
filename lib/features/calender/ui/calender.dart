@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../models/event_model.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../services/event_storage.dart';
+import '../../../services/notification_service.dart';
 import '../widget/calendar_grid.dart';
 import 'event_edit_page.dart';
 import 'events_list_page.dart';
@@ -35,12 +36,28 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   static const List<String> _monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   static const List<String> _weekdayNames = [
-    'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
   ];
 
   void _addMonths(int months) {
@@ -66,7 +83,9 @@ class _CalendarPageState extends State<CalendarPage> {
       MaterialPageRoute(
         builder: (context) => EventEditPage(
           selectedDate: _selectedDate,
-          onSave: (event) {
+          onSave: (event) async {
+            await EventStorage.instance.create(event);
+            await NotificationService.instance.scheduleEventReminder(event);
             setState(() => _events.add(event));
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -94,10 +113,13 @@ class _CalendarPageState extends State<CalendarPage> {
           selectedDate: _selectedDate,
           onAddEvent: (event) async {
             await EventStorage.instance.create(event);
+            await NotificationService.instance.scheduleEventReminder(event);
             setState(() => _events.add(event));
           },
           onEditEvent: (event) async {
             await EventStorage.instance.update(event);
+            await NotificationService.instance.cancelEventReminder(event.id);
+            await NotificationService.instance.scheduleEventReminder(event);
             setState(() {
               final index = _events.indexWhere((e) => e.id == event.id);
               if (index != -1) {
@@ -106,6 +128,7 @@ class _CalendarPageState extends State<CalendarPage> {
             });
           },
           onDeleteEvent: (eventId) async {
+            await NotificationService.instance.cancelEventReminder(eventId);
             await EventStorage.instance.delete(eventId);
             setState(() {
               _events.removeWhere((e) => e.id == eventId);
@@ -119,7 +142,7 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
@@ -159,8 +182,8 @@ class _CalendarPageState extends State<CalendarPage> {
           // Weekday Headers
           Padding(
             padding: const EdgeInsets.only(
-              left: 16, 
-              right: 16, 
+              left: 16,
+              right: 16,
               top: 20.0,
               bottom: 0,
             ),
@@ -174,7 +197,10 @@ class _CalendarPageState extends State<CalendarPage> {
                         decoration: BoxDecoration(
                           color: themeProvider.searchFillColor,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: themeProvider.dividerColor, width: 0.5),
+                          border: Border.all(
+                            color: themeProvider.dividerColor,
+                            width: 0.5,
+                          ),
                         ),
                         child: Center(
                           child: Text(
@@ -214,9 +240,7 @@ class _CalendarPageState extends State<CalendarPage> {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
             child: Row(
               children: [
                 Expanded(

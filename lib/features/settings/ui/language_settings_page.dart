@@ -19,10 +19,7 @@ class LanguageSettingsPage extends StatefulWidget {
 
 class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
   late AppSettings _settings;
-  final List<String> _languages = [
-    'English',
-    'Khmer',
-  ];
+  final List<String> _languages = ['English', 'Khmer'];
 
   @override
   void initState() {
@@ -38,7 +35,7 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -65,7 +62,7 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -76,7 +73,9 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: isSelected ? themeProvider.accentColor : Colors.grey[100],
+                  color: isSelected
+                      ? themeProvider.accentColor
+                      : Colors.grey[100],
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -93,7 +92,9 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
                 language,
                 style: TextStyle(
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? themeProvider.accentColor : Colors.black87,
+                  color: isSelected
+                      ? themeProvider.accentColor
+                      : Colors.black87,
                 ),
               ),
               trailing: isSelected

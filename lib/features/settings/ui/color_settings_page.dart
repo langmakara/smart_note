@@ -58,10 +58,7 @@ class _ColorSettingsPageState extends State<ColorSettingsPage> {
         elevation: 1,
         title: const Text(
           'Accent Color',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.purple,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple),
         ),
       ),
       body: Column(
@@ -71,24 +68,19 @@ class _ColorSettingsPageState extends State<ColorSettingsPage> {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: _settings.accentColor.withOpacity(0.1),
+              color: _settings.accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _settings.accentColor.withOpacity(0.3)),
+              border: Border.all(
+                color: _settings.accentColor.withValues(alpha: 0.3),
+              ),
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.color_lens,
-                  size: 48,
-                  color: _settings.accentColor,
-                ),
+                Icon(Icons.color_lens, size: 48, color: _settings.accentColor),
                 const SizedBox(height: 12),
                 Text(
                   'Current Accent Color',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -114,13 +106,16 @@ class _ColorSettingsPageState extends State<ColorSettingsPage> {
               itemCount: _colorOptions.length,
               itemBuilder: (context, index) {
                 final color = _colorOptions[index];
-                final isSelected = _settings.accentColor.value == color.value;
+                final isSelected =
+                    _settings.accentColor.toARGB32() == color.toARGB32();
                 return GestureDetector(
                   onTap: () {
                     _updateSettings(_settings.copyWith(accentColor: color));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Accent color changed to ${_getColorName(color)}'),
+                        content: Text(
+                          'Accent color changed to ${_getColorName(color)}',
+                        ),
                         backgroundColor: color,
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
@@ -135,33 +130,26 @@ class _ColorSettingsPageState extends State<ColorSettingsPage> {
                       color: color,
                       shape: BoxShape.circle,
                       border: isSelected
-                          ? Border.all(
-                              color: Colors.white,
-                              width: 4,
-                            )
+                          ? Border.all(color: Colors.white, width: 4)
                           : null,
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: color.withOpacity(0.5),
+                                color: color.withValues(alpha: 0.5),
                                 blurRadius: 12,
                                 spreadRadius: 2,
                               ),
                             ]
                           : [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),
                             ],
                     ),
                     child: isSelected
-                        ? const Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 24,
-                          )
+                        ? const Icon(Icons.check, color: Colors.white, size: 24)
                         : null,
                   ),
                 );
@@ -176,19 +164,19 @@ class _ColorSettingsPageState extends State<ColorSettingsPage> {
 
   String _getColorName(Color color) {
     final colorMap = {
-      Colors.purple.value: 'Purple',
-      Colors.blue.value: 'Blue',
-      Colors.green.value: 'Green',
-      Colors.orange.value: 'Orange',
-      Colors.red.value: 'Red',
-      Colors.teal.value: 'Teal',
-      Colors.pink.value: 'Pink',
-      Colors.indigo.value: 'Indigo',
-      Colors.amber.value: 'Amber',
-      Colors.cyan.value: 'Cyan',
-      Colors.lime.value: 'Lime',
-      Colors.brown.value: 'Brown',
+      Colors.purple.toARGB32(): 'Purple',
+      Colors.blue.toARGB32(): 'Blue',
+      Colors.green.toARGB32(): 'Green',
+      Colors.orange.toARGB32(): 'Orange',
+      Colors.red.toARGB32(): 'Red',
+      Colors.teal.toARGB32(): 'Teal',
+      Colors.pink.toARGB32(): 'Pink',
+      Colors.indigo.toARGB32(): 'Indigo',
+      Colors.amber.toARGB32(): 'Amber',
+      Colors.cyan.toARGB32(): 'Cyan',
+      Colors.lime.toARGB32(): 'Lime',
+      Colors.brown.toARGB32(): 'Brown',
     };
-    return colorMap[color.value] ?? 'Custom';
+    return colorMap[color.toARGB32()] ?? 'Custom';
   }
 }

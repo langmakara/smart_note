@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../models/app_settings_model.dart';
 import '../../../providers/theme_provider.dart';
 import '../widget/theme_switch_tile.dart';
 import 'appearance_settings_page.dart';
@@ -17,16 +16,11 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  AppSettings _settings = AppSettings();
-
-  void _updateSettings(AppSettings newSettings) {
-    setState(() => _settings = newSettings);
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+    final settings = themeProvider.settings;
+
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
@@ -53,7 +47,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 isDarkMode: themeProvider.isDarkMode,
                 onThemeChanged: (value) {
                   themeProvider.setDarkMode(value);
-                  _updateSettings(_settings.copyWith(isDarkMode: value));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
@@ -70,7 +63,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Divider(color: themeProvider.dividerColor),
               ListTile(
-                leading: Icon(Icons.color_lens, color: _settings.accentColor),
+                leading: Icon(Icons.color_lens, color: settings.accentColor),
                 title: Text(
                   "Accent Color",
                   style: TextStyle(color: themeProvider.textColor),
@@ -79,7 +72,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: _settings.accentColor,
+                    color: settings.accentColor,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -88,8 +81,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => ColorSettingsPage(
-                        settings: _settings,
-                        onSettingsChanged: _updateSettings,
+                        settings: settings,
+                        onSettingsChanged: (newSettings) {
+                          themeProvider.updateSettings(newSettings);
+                        },
                       ),
                     ),
                   );
@@ -102,14 +97,19 @@ class _SettingsPageState extends State<SettingsPage> {
                   "Appearance Settings",
                   style: TextStyle(color: themeProvider.textColor),
                 ),
-                trailing: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: themeProvider.subtitleColor,
+                ),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => AppearanceSettingsPage(
-                        settings: _settings,
-                        onSettingsChanged: _updateSettings,
+                        settings: settings,
+                        onSettingsChanged: (newSettings) {
+                          themeProvider.updateSettings(newSettings);
+                        },
                       ),
                     ),
                   );
@@ -135,13 +135,13 @@ class _SettingsPageState extends State<SettingsPage> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: _settings.accentColor.withOpacity(0.1),
+                    color: settings.accentColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    _settings.language,
+                    settings.language,
                     style: TextStyle(
-                      color: _settings.accentColor,
+                      color: settings.accentColor,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),
@@ -152,8 +152,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => LanguageSettingsPage(
-                        settings: _settings,
-                        onSettingsChanged: _updateSettings,
+                        settings: settings,
+                        onSettingsChanged: (newSettings) {
+                          themeProvider.updateSettings(newSettings);
+                        },
                       ),
                     ),
                   );
@@ -161,19 +163,27 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Divider(color: themeProvider.dividerColor),
               ListTile(
-                leading: Icon(Icons.notifications, color: themeProvider.accentColor),
+                leading: Icon(
+                  Icons.notifications,
+                  color: themeProvider.accentColor,
+                ),
                 title: Text(
                   "Notifications",
                   style: TextStyle(color: themeProvider.textColor),
                 ),
-                trailing: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: themeProvider.subtitleColor,
+                ),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => NotificationSettingsPage(
-                        settings: _settings,
-                        onSettingsChanged: _updateSettings,
+                        settings: settings,
+                        onSettingsChanged: (newSettings) {
+                          themeProvider.updateSettings(newSettings);
+                        },
                       ),
                     ),
                   );
@@ -188,12 +198,18 @@ class _SettingsPageState extends State<SettingsPage> {
             themeProvider: themeProvider,
             children: [
               ListTile(
-                leading: Icon(Icons.info_outline, color: themeProvider.accentColor),
+                leading: Icon(
+                  Icons.info_outline,
+                  color: themeProvider.accentColor,
+                ),
                 title: Text(
                   "About Smart Note",
                   style: TextStyle(color: themeProvider.textColor),
                 ),
-                trailing: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: themeProvider.subtitleColor,
+                ),
                 onTap: () {
                   showAboutDialog(
                     context: context,
@@ -225,14 +241,19 @@ class _SettingsPageState extends State<SettingsPage> {
                   "Data Management",
                   style: TextStyle(color: themeProvider.textColor),
                 ),
-                trailing: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: themeProvider.subtitleColor,
+                ),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => DataManagementPage(
-                        settings: _settings,
-                        onSettingsChanged: _updateSettings,
+                        settings: settings,
+                        onSettingsChanged: (newSettings) {
+                          themeProvider.updateSettings(newSettings);
+                        },
                       ),
                     ),
                   );
@@ -240,12 +261,18 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Divider(color: themeProvider.dividerColor),
               ListTile(
-                leading: Icon(Icons.star_border, color: themeProvider.accentColor),
+                leading: Icon(
+                  Icons.star_border,
+                  color: themeProvider.accentColor,
+                ),
                 title: Text(
                   "Rate the App",
                   style: TextStyle(color: themeProvider.textColor),
                 ),
-                trailing: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: themeProvider.subtitleColor,
+                ),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -266,7 +293,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   "Send Feedback",
                   style: TextStyle(color: themeProvider.textColor),
                 ),
-                trailing: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: themeProvider.subtitleColor,
+                ),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

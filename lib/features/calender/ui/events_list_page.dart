@@ -31,19 +31,24 @@ class _EventsListPageState extends State<EventsListPage> {
 
   List<Event> get _filteredEvents {
     return widget.events.where((event) {
-      final matchesSearch = event.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      final matchesSearch =
+          event.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           event.description.toLowerCase().contains(_searchQuery.toLowerCase());
       final matchesColor = _filterColor == null || event.color == _filterColor;
-      final matchesDate = widget.selectedDate == null || event.isOnDate(widget.selectedDate!);
+      final matchesDate =
+          widget.selectedDate == null || event.isOnDate(widget.selectedDate!);
       return matchesSearch && matchesColor && matchesDate;
-    }).toList()
-      ..sort((a, b) => a.startTime.compareTo(b.startTime));
+    }).toList()..sort((a, b) => a.startTime.compareTo(b.startTime));
   }
 
   Map<DateTime, List<Event>> get _eventsByDate {
     final Map<DateTime, List<Event>> grouped = {};
     for (final event in _filteredEvents) {
-      final date = DateTime(event.startTime.year, event.startTime.month, event.startTime.day);
+      final date = DateTime(
+        event.startTime.year,
+        event.startTime.month,
+        event.startTime.day,
+      );
       grouped[date] = [...(grouped[date] ?? []), event];
     }
     return grouped;
@@ -52,7 +57,7 @@ class _EventsListPageState extends State<EventsListPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
@@ -83,7 +88,10 @@ class _EventsListPageState extends State<EventsListPage> {
                 TextField(
                   decoration: InputDecoration(
                     hintText: 'Search events...',
-                    prefixIcon: Icon(Icons.search, color: themeProvider.subtitleColor),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: themeProvider.subtitleColor,
+                    ),
                     filled: true,
                     fillColor: themeProvider.searchFillColor,
                     border: OutlineInputBorder(
@@ -119,13 +127,29 @@ class _EventsListPageState extends State<EventsListPage> {
                           children: [
                             _buildColorFilter(null, 'All', themeProvider),
                             const SizedBox(width: 4),
-                            _buildColorFilter(Colors.blue, 'Blue', themeProvider),
+                            _buildColorFilter(
+                              Colors.blue,
+                              'Blue',
+                              themeProvider,
+                            ),
                             const SizedBox(width: 4),
-                            _buildColorFilter(themeProvider.accentColor, 'Accent', themeProvider),
+                            _buildColorFilter(
+                              themeProvider.accentColor,
+                              'Accent',
+                              themeProvider,
+                            ),
                             const SizedBox(width: 4),
-                            _buildColorFilter(Colors.green, 'Green', themeProvider),
+                            _buildColorFilter(
+                              Colors.green,
+                              'Green',
+                              themeProvider,
+                            ),
                             const SizedBox(width: 4),
-                            _buildColorFilter(Colors.orange, 'Orange', themeProvider),
+                            _buildColorFilter(
+                              Colors.orange,
+                              'Orange',
+                              themeProvider,
+                            ),
                             const SizedBox(width: 4),
                             _buildColorFilter(Colors.red, 'Red', themeProvider),
                           ],
@@ -147,7 +171,9 @@ class _EventsListPageState extends State<EventsListPage> {
                         Icon(
                           Icons.event_busy,
                           size: 64,
-                          color: themeProvider.subtitleColor.withOpacity(0.5),
+                          color: themeProvider.subtitleColor.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -165,7 +191,9 @@ class _EventsListPageState extends State<EventsListPage> {
                           'Tap the + button to add an event',
                           style: TextStyle(
                             fontSize: 14,
-                            color: themeProvider.subtitleColor.withOpacity(0.7),
+                            color: themeProvider.subtitleColor.withValues(
+                              alpha: 0.7,
+                            ),
                           ),
                         ),
                       ],
@@ -187,29 +215,40 @@ class _EventsListPageState extends State<EventsListPage> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: themeProvider.accentColor.withValues(alpha: 0.1),
+                              color: themeProvider.accentColor.withValues(
+                                alpha: 0.1,
+                              ),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: themeProvider.accentColor.withValues(alpha: 0.2), width: 0.5),
+                              border: Border.all(
+                                color: themeProvider.accentColor.withValues(
+                                  alpha: 0.2,
+                                ),
+                                width: 0.5,
+                              ),
                             ),
                             child: Text(
                               _formatDate(date),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: themeProvider.accentColor.withOpacity(0.7),
+                                color: themeProvider.accentColor.withValues(
+                                  alpha: 0.7,
+                                ),
                               ),
                             ),
                           ),
                           const SizedBox(height: 8),
                           // Events for this date
-                          ...events.map((event) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: EventCard(
-                              event: event,
-                              onTap: () => _editEvent(context, event),
-                              onDelete: () => _confirmDelete(event),
+                          ...events.map(
+                            (event) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: EventCard(
+                                event: event,
+                                onTap: () => _editEvent(context, event),
+                                onDelete: () => _confirmDelete(event),
+                              ),
                             ),
-                          )),
+                          ),
                           const SizedBox(height: 16),
                         ],
                       );
@@ -227,7 +266,11 @@ class _EventsListPageState extends State<EventsListPage> {
     );
   }
 
-  Widget _buildColorFilter(Color? color, String label, ThemeProvider themeProvider) {
+  Widget _buildColorFilter(
+    Color? color,
+    String label,
+    ThemeProvider themeProvider,
+  ) {
     final isSelected = _filterColor == color;
     return GestureDetector(
       onTap: () {
@@ -236,9 +279,13 @@ class _EventsListPageState extends State<EventsListPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? themeProvider.accentColor : themeProvider.searchFillColor,
+          color: isSelected
+              ? themeProvider.accentColor
+              : themeProvider.searchFillColor,
           borderRadius: BorderRadius.circular(20),
-          border: isSelected ? null : Border.all(color: themeProvider.dividerColor),
+          border: isSelected
+              ? null
+              : Border.all(color: themeProvider.dividerColor),
         ),
         child: Row(
           children: [
@@ -246,10 +293,7 @@ class _EventsListPageState extends State<EventsListPage> {
               Container(
                 width: 12,
                 height: 12,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
             if (color != null) const SizedBox(width: 6),
             Text(
@@ -284,14 +328,32 @@ class _EventsListPageState extends State<EventsListPage> {
 
   String _getMonthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month - 1];
   }
 
   String _getWeekdayName(int weekday) {
-    const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const weekdays = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
     return weekdays[weekday - 1];
   }
 

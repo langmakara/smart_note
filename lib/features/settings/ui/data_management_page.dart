@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/app_settings_model.dart';
 import '../../../providers/theme_provider.dart';
+import '../../../services/google_drive_service.dart';
+import 'google_login_page.dart';
 
 class DataManagementPage extends StatefulWidget {
   final AppSettings settings;
@@ -21,11 +23,91 @@ class _DataManagementPageState extends State<DataManagementPage> {
   late AppSettings _settings;
   bool _isExporting = false;
   bool _isImporting = false;
+  bool _isBackingUp = false;
 
   @override
   void initState() {
     super.initState();
     _settings = widget.settings;
+  }
+
+  GoogleDriveService get _driveService =>
+      Provider.of<GoogleDriveService>(context, listen: false);
+
+  void _updateAuthStatus() {
+    setState(() {});
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _driveService.addListener(_updateAuthStatus);
+  }
+
+  @override
+  void dispose() {
+    _driveService.removeListener(_updateAuthStatus);
+    super.dispose();
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            GoogleLoginPage(onLoginSuccess: () => Navigator.pop(context, true)),
+      ),
+    );
+
+    if (result == true) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _handleGoogleLogout() async {
+    await _driveService.signOut();
+    setState(() {});
+  }
+
+  Future<void> _backupToGoogleDrive() async {
+    setState(() => _isBackingUp = true);
+    try {
+      await _driveService.backupData(
+        fileName:
+            'smart_note_backup_${DateTime.now().millisecondsSinceEpoch}.json',
+        content: '{"notes": [], "events": []}',
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Backup completed successfully!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Backup failed: $error'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isBackingUp = false);
+      }
+    }
   }
 
   void _updateSettings(AppSettings newSettings) {
@@ -36,35 +118,37 @@ class _DataManagementPageState extends State<DataManagementPage> {
   Future<void> _exportData() async {
     setState(() => _isExporting = true);
     await Future.delayed(const Duration(seconds: 2));
-    setState(() => _isExporting = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Data exported successfully!'),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    if (mounted) {
+      setState(() => _isExporting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Data exported successfully!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   Future<void> _importData() async {
     setState(() => _isImporting = true);
     await Future.delayed(const Duration(seconds: 2));
-    setState(() => _isImporting = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Data imported successfully!'),
-        backgroundColor: Colors.blue,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    if (mounted) {
+      setState(() => _isImporting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Data imported successfully!'),
+          backgroundColor: Colors.blue,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   Future<void> _clearAllData() async {
@@ -90,23 +174,25 @@ class _DataManagementPageState extends State<DataManagementPage> {
     );
 
     if (confirmed == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('All data cleared!'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('All data cleared!'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -127,11 +213,11 @@ class _DataManagementPageState extends State<DataManagementPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: themeProvider.cardColor,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: themeProvider.shadowColor,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -141,25 +227,28 @@ class _DataManagementPageState extends State<DataManagementPage> {
               children: [
                 Icon(
                   _settings.autoBackup ? Icons.backup : Icons.backup_outlined,
-                  color: _settings.autoBackup ? Colors.green : Colors.grey,
+                  color: _settings.autoBackup
+                      ? Colors.green
+                      : themeProvider.subtitleColor,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Auto Backup',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: themeProvider.textColor,
                         ),
                       ),
                       Text(
                         _settings.autoBackup ? 'Enabled' : 'Disabled',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey[600],
+                          color: themeProvider.subtitleColor,
                         ),
                       ),
                     ],
@@ -170,10 +259,140 @@ class _DataManagementPageState extends State<DataManagementPage> {
                   onChanged: (value) {
                     _updateSettings(_settings.copyWith(autoBackup: value));
                   },
-                  activeColor: Colors.green,
+                  activeThumbColor: Colors.green,
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 16),
+
+          // Google Drive Backup
+          Consumer<GoogleDriveService>(
+            builder: (context, driveService, child) {
+              final isAuthenticated = driveService.isAuthenticated;
+              final userEmail = driveService.currentUser?.email;
+
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: themeProvider.cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: themeProvider.shadowColor,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          isAuthenticated
+                              ? Icons.cloud_done
+                              : Icons.cloud_upload,
+                          color: isAuthenticated
+                              ? Colors.green
+                              : themeProvider.subtitleColor,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Google Drive Backup',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: themeProvider.textColor,
+                                ),
+                              ),
+                              if (isAuthenticated && userEmail != null)
+                                Text(
+                                  userEmail,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: themeProvider.subtitleColor,
+                                  ),
+                                )
+                              else
+                                Text(
+                                  isAuthenticated
+                                      ? 'Connected'
+                                      : 'Not connected',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: themeProvider.subtitleColor,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: isAuthenticated
+                            ? (_isBackingUp ? null : _backupToGoogleDrive)
+                            : _handleGoogleLogin,
+                        icon: _isBackingUp
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Icon(
+                                isAuthenticated ? Icons.backup : Icons.login,
+                              ),
+                        label: Text(
+                          _isBackingUp
+                              ? 'Backing up...'
+                              : isAuthenticated
+                              ? 'Backup Now'
+                              : 'Sign in with Google',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isAuthenticated
+                              ? Colors.blue
+                              : Colors.white,
+                          foregroundColor: isAuthenticated
+                              ? Colors.white
+                              : Colors.black,
+                          elevation: 1,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          side: isAuthenticated
+                              ? null
+                              : BorderSide(color: Colors.grey[300]!),
+                        ),
+                      ),
+                    ),
+                    if (isAuthenticated)
+                      TextButton(
+                        onPressed: _handleGoogleLogout,
+                        child: const Text(
+                          'Sign out',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
           const SizedBox(height: 16),
 
@@ -185,7 +404,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -196,10 +415,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
               children: [
                 const Text(
                   'Export & Import',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -234,11 +450,11 @@ class _DataManagementPageState extends State<DataManagementPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: themeProvider.cardColor,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: themeProvider.shadowColor,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -247,11 +463,12 @@ class _DataManagementPageState extends State<DataManagementPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Storage',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: themeProvider.textColor,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -284,9 +501,9 @@ class _DataManagementPageState extends State<DataManagementPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.05),
+              color: Colors.red.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.red.withOpacity(0.2)),
+              border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -306,12 +523,9 @@ class _DataManagementPageState extends State<DataManagementPage> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Warning: These actions are permanent and cannot be undone.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.red,
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.red.shade400),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
@@ -362,9 +576,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
         backgroundColor: color,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -375,13 +587,14 @@ class _DataManagementPageState extends State<DataManagementPage> {
     required IconData icon,
     required Color color,
   }) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Row(
       children: [
         Container(
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, size: 18, color: color),
@@ -389,9 +602,10 @@ class _DataManagementPageState extends State<DataManagementPage> {
         const SizedBox(width: 12),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
+            color: themeProvider.textColor,
           ),
         ),
         const Spacer(),

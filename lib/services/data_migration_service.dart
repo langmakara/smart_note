@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../models/note_model.dart';
@@ -21,14 +22,14 @@ class DataMigrationService {
       final directory = await getApplicationDocumentsDirectory();
       final notesFile = File('${directory.path}/notes.json');
       final eventsFile = File('${directory.path}/events.json');
-      
+
       final notesExist = await notesFile.exists();
       final eventsExist = await eventsFile.exists();
-      
+
       // Check if database already has data
       final noteCount = await NoteRepository.instance.getCount();
       final eventCount = await EventRepository.instance.getCount();
-      
+
       // Migration needed if JSON files exist AND database is empty
       return (notesExist || eventsExist) && (noteCount == 0 && eventCount == 0);
     } catch (e) {
@@ -39,7 +40,7 @@ class DataMigrationService {
   // Perform migration
   Future<MigrationResult> migrate() async {
     final result = MigrationResult();
-    
+
     try {
       // Check if database exists, create if not
       final dbExists = await DatabaseHelper.instance.databaseExists();
@@ -75,7 +76,7 @@ class DataMigrationService {
     try {
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/notes.json');
-      
+
       if (!await file.exists()) {
         return 0;
       }
@@ -94,13 +95,13 @@ class DataMigrationService {
           await NoteRepository.instance.create(note);
           count++;
         } catch (e) {
-          print('Error migrating note: $e');
+          debugPrint('Error migrating note: $e');
         }
       }
 
       return count;
     } catch (e) {
-      print('Error migrating notes: $e');
+      debugPrint('Error migrating notes: $e');
       return 0;
     }
   }
@@ -110,7 +111,7 @@ class DataMigrationService {
     try {
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/events.json');
-      
+
       if (!await file.exists()) {
         return 0;
       }
@@ -129,13 +130,13 @@ class DataMigrationService {
           await EventRepository.instance.create(event);
           count++;
         } catch (e) {
-          print('Error migrating event: $e');
+          debugPrint('Error migrating event: $e');
         }
       }
 
       return count;
     } catch (e) {
-      print('Error migrating events: $e');
+      debugPrint('Error migrating events: $e');
       return 0;
     }
   }
@@ -144,7 +145,7 @@ class DataMigrationService {
   Future<void> _cleanupOldFiles() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
-      
+
       // Delete notes.json
       final notesFile = File('${directory.path}/notes.json');
       if (await notesFile.exists()) {
@@ -157,18 +158,21 @@ class DataMigrationService {
         await eventsFile.delete();
       }
     } catch (e) {
-      print('Error cleaning up old files: $e');
+      debugPrint('Error cleaning up old files: $e');
     }
   }
 
   // Export data to JSON (for backup)
   Future<ExportResult> exportToJson() async {
     final result = ExportResult();
-    
+
     try {
       final directory = await getApplicationDocumentsDirectory();
-      final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').substring(0, 19);
-      
+      final timestamp = DateTime.now()
+          .toIso8601String()
+          .replaceAll(':', '-')
+          .substring(0, 19);
+
       // Export notes
       final notes = await NoteRepository.instance.getAll();
       final notesJson = notes.map((note) => note.toJson()).toList();
@@ -180,7 +184,9 @@ class DataMigrationService {
       // Export events
       final events = await EventRepository.instance.getAll();
       final eventsJson = events.map((event) => event.toJson()).toList();
-      final eventsFile = File('${directory.path}/events_backup_$timestamp.json');
+      final eventsFile = File(
+        '${directory.path}/events_backup_$timestamp.json',
+      );
       await eventsFile.writeAsString(json.encode(eventsJson));
       result.eventsExported = events.length;
       result.eventsFilePath = eventsFile.path;
@@ -188,13 +194,15 @@ class DataMigrationService {
       // Export settings
       final settings = await SettingsRepository.instance.load();
       final settingsMap = settings.toMap();
-      final settingsFile = File('${directory.path}/settings_backup_$timestamp.json');
+      final settingsFile = File(
+        '${directory.path}/settings_backup_$timestamp.json',
+      );
       await settingsFile.writeAsString(json.encode(settingsMap));
       result.settingsFilePath = settingsFile.path;
 
       result.success = true;
       result.message = 'Export completed successfully';
-      
+
       return result;
     } catch (e) {
       result.success = false;
@@ -204,16 +212,20 @@ class DataMigrationService {
   }
 
   // Import data from JSON (for restore)
-  Future<ImportResult> importFromJson(String notesPath, String eventsPath, String settingsPath) async {
+  Future<ImportResult> importFromJson(
+    String notesPath,
+    String eventsPath,
+    String settingsPath,
+  ) async {
     final result = ImportResult();
-    
+
     try {
       // Import notes
       final notesFile = File(notesPath);
       if (await notesFile.exists()) {
         final contents = await notesFile.readAsString();
         final List<dynamic> jsonList = json.decode(contents);
-        
+
         for (var json in jsonList) {
           final note = Note.fromJson(json);
           await NoteRepository.instance.create(note);
@@ -226,7 +238,7 @@ class DataMigrationService {
       if (await eventsFile.exists()) {
         final contents = await eventsFile.readAsString();
         final List<dynamic> jsonList = json.decode(contents);
-        
+
         for (var json in jsonList) {
           final event = Event.fromJson(json);
           await EventRepository.instance.create(event);
@@ -239,7 +251,7 @@ class DataMigrationService {
       if (await settingsFile.exists()) {
         final contents = await settingsFile.readAsString();
         final Map<String, dynamic> settingsMap = json.decode(contents);
-        
+
         final settings = AppSettings.fromMap(settingsMap);
         await SettingsRepository.instance.save(settings);
         result.settingsImported = true;
@@ -247,7 +259,7 @@ class DataMigrationService {
 
       result.success = true;
       result.message = 'Import completed successfully';
-      
+
       return result;
     } catch (e) {
       result.success = false;

@@ -30,7 +30,7 @@ class AppSettings {
   Map<String, dynamic> toMap() {
     return {
       'isDarkMode': isDarkMode,
-      'accentColor': accentColor.value,
+      'accentColor': accentColor.toARGB32(),
       'language': language,
       'notificationsEnabled': notificationsEnabled,
       'eventReminders': eventReminders,
@@ -46,7 +46,7 @@ class AppSettings {
   factory AppSettings.fromMap(Map<String, dynamic> map) {
     return AppSettings(
       isDarkMode: map['isDarkMode'] ?? false,
-      accentColor: Color(map['accentColor'] ?? Colors.purple.value),
+      accentColor: Color(map['accentColor'] ?? Colors.purple.toARGB32()),
       language: map['language'] ?? 'English',
       notificationsEnabled: map['notificationsEnabled'] ?? true,
       eventReminders: map['eventReminders'] ?? true,

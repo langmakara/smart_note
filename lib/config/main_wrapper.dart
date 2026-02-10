@@ -31,13 +31,10 @@ class _MainWrapperState extends State<MainWrapper> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: themeProvider.bottomNavBgColor,
@@ -90,7 +87,9 @@ class _MainWrapperState extends State<MainWrapper> {
     required ThemeProvider themeProvider,
   }) {
     final isSelected = _currentIndex == index;
-    final color = isSelected ? themeProvider.accentColor : themeProvider.subtitleColor;
+    final color = isSelected
+        ? themeProvider.accentColor
+        : themeProvider.subtitleColor;
 
     return Material(
       color: Colors.transparent,
@@ -103,7 +102,7 @@ class _MainWrapperState extends State<MainWrapper> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: isSelected
               ? BoxDecoration(
-                  color: themeProvider.accentColor.withOpacity(0.1),
+                  color: themeProvider.accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 )
               : null,
@@ -115,7 +114,9 @@ class _MainWrapperState extends State<MainWrapper> {
                 curve: Curves.easeInOut,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: isSelected ? themeProvider.accentColor : Colors.transparent,
+                  color: isSelected
+                      ? themeProvider.accentColor
+                      : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(

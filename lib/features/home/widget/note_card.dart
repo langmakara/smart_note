@@ -3,121 +3,111 @@ import '../../../models/note_model.dart';
 
 class NoteCard extends StatelessWidget {
   final Note note;
-  final VoidCallback onTap;
+  final VoidCallback onView;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const NoteCard({
     super.key,
     required this.note,
-    required this.onTap,
+    required this.onView,
+    required this.onEdit,
     required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: () {
-        showModalBottomSheet(
-          context: context,
-          backgroundColor: Colors.transparent,
-          builder: (context) => Container(
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.edit, color: Colors.blue),
-                  title: const Text("Edit Note"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    onTap();
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.delete, color: Colors.red),
-                  title: const Text("Delete Note"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    onDelete();
-                  },
-                ),
-                if (note.isPinned)
-                  ListTile(
-                    leading: const Icon(Icons.push_pin, color: Colors.orange),
-                    title: const Text("Unpin Note"),
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-              ],
-            ),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: note.color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: note.color.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: note.color.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
-        );
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: note.color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: note.color.withOpacity(0.3)),
-          boxShadow: [
-            BoxShadow(
-              color: note.color.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                if (note.isPinned)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 4),
-                    child: Icon(Icons.push_pin, size: 16, color: Colors.orange),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              if (note.isPinned)
+                Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: Icon(Icons.push_pin, size: 16, color: Colors.orange),
+                ),
+              Expanded(
+                child: Text(
+                  note.title.isEmpty ? "Untitled" : note.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: note.color,
                   ),
-                Expanded(
-                  child: Text(
-                    note.title.isEmpty ? "Untitled" : note.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: note.color,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              IconButton(
+                onPressed: onDelete,
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: Colors.red.withValues(alpha: 0.7),
+                  size: 22,
+                ),
+                tooltip: 'Delete',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            note.content.isEmpty ? "No content" : note.content,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: Colors.grey[700], fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _formatDate(note.updatedAt ?? note.createdAt),
+                style: TextStyle(
+                  color: note.color.withValues(alpha: 0.7),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              TextButton(
+                onPressed: onEdit,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  minimumSize: Size.zero,
+                ),
+                child: Text(
+                  'Edit',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: note.color,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Text(
-                note.content.isEmpty ? "No content" : note.content,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: Colors.grey[700], fontSize: 14),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _formatDate(note.updatedAt ?? note.createdAt),
-              style: TextStyle(
-                color: note.color.withOpacity(0.7),
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }

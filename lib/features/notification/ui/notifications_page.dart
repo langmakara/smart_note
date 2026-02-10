@@ -14,7 +14,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
   final List<Map<String, dynamic>> _notifications = [
     {
       "title": "Reminder: Project Meeting",
-      "description": "Don't forget to check your notes for the meeting at 2:00 PM.",
+      "description":
+          "Don't forget to check your notes for the meeting at 2:00 PM.",
       "time": "2 mins ago",
       "icon": Icons.notifications_active,
       "iconColor": Colors.orange,
@@ -98,7 +99,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
@@ -135,7 +136,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   Icon(
                     Icons.notifications_none,
                     size: 80,
-                    color: themeProvider.subtitleColor.withOpacity(0.5),
+                    color: themeProvider.subtitleColor.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -149,7 +150,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   const SizedBox(height: 8),
                   Text(
                     "You're all caught up!",
-                    style: TextStyle(color: themeProvider.subtitleColor.withOpacity(0.7)),
+                    style: TextStyle(
+                      color: themeProvider.subtitleColor.withValues(alpha: 0.7),
+                    ),
                   ),
                 ],
               ),

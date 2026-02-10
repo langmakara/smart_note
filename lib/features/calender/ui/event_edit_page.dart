@@ -28,6 +28,7 @@ class _EventEditPageState extends State<EventEditPage> {
   late DateTime _endTime;
   late Color _selectedColor;
   bool _isAllDay = false;
+  int? _selectedReminder;
 
   final List<Color> _eventColors = [
     Colors.blue,
@@ -40,25 +41,36 @@ class _EventEditPageState extends State<EventEditPage> {
     Colors.indigo,
   ];
 
+  final List<Map<String, dynamic>> _reminderOptions = [
+    {'label': 'None', 'value': null},
+    {'label': '15 minutes before', 'value': 15},
+    {'label': '1 hour before', 'value': 60},
+    {'label': '1 day before', 'value': 1440},
+  ];
+
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.event?.title ?? '');
-    _descriptionController =
-        TextEditingController(text: widget.event?.description ?? '');
-    _locationController =
-        TextEditingController(text: widget.event?.location ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.event?.description ?? '',
+    );
+    _locationController = TextEditingController(
+      text: widget.event?.location ?? '',
+    );
 
     if (widget.event != null) {
       _startTime = widget.event!.startTime;
       _endTime = widget.event!.endTime;
       _selectedColor = widget.event!.color;
       _isAllDay = widget.event!.isAllDay;
+      _selectedReminder = widget.event!.reminderMinutes;
     } else {
       final now = widget.selectedDate ?? DateTime.now();
       _startTime = DateTime(now.year, now.month, now.day, 9, 0);
       _endTime = DateTime(now.year, now.month, now.day, 10, 0);
       _selectedColor = Colors.blue;
+      _selectedReminder = null;
     }
   }
 
@@ -139,14 +151,19 @@ class _EventEditPageState extends State<EventEditPage> {
   void _saveEvent() {
     if (_formKey.currentState!.validate()) {
       final event = Event(
-        id: widget.event?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        id:
+            widget.event?.id ??
+            DateTime.now().millisecondsSinceEpoch.toString(),
         title: _titleController.text,
         description: _descriptionController.text,
         startTime: _startTime,
         endTime: _endTime,
         color: _selectedColor,
         isAllDay: _isAllDay,
-        location: _locationController.text.isNotEmpty ? _locationController.text : null,
+        location: _locationController.text.isNotEmpty
+            ? _locationController.text
+            : null,
+        reminderMinutes: _selectedReminder,
       );
       widget.onSave(event);
       Navigator.pop(context);
@@ -156,11 +173,11 @@ class _EventEditPageState extends State<EventEditPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: themeProvider.appBarColor,
         elevation: 1,
         title: Text(
           widget.event != null ? 'Edit Event' : 'Add Event',
@@ -222,11 +239,11 @@ class _EventEditPageState extends State<EventEditPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: themeProvider.cardColor,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: themeProvider.shadowColor,
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -236,11 +253,12 @@ class _EventEditPageState extends State<EventEditPage> {
                   children: [
                     Icon(Icons.access_time, color: themeProvider.accentColor),
                     const SizedBox(width: 12),
-                    const Text(
+                    Text(
                       'All Day Event',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: themeProvider.textColor,
                       ),
                     ),
                     const Spacer(),
@@ -249,7 +267,7 @@ class _EventEditPageState extends State<EventEditPage> {
                       onChanged: (value) {
                         setState(() => _isAllDay = value);
                       },
-                      activeColor: themeProvider.accentColor,
+                      activeThumbColor: themeProvider.accentColor,
                     ),
                   ],
                 ),
@@ -260,11 +278,11 @@ class _EventEditPageState extends State<EventEditPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: themeProvider.cardColor,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: themeProvider.shadowColor,
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -273,11 +291,12 @@ class _EventEditPageState extends State<EventEditPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Date & Time',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: themeProvider.textColor,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -325,11 +344,11 @@ class _EventEditPageState extends State<EventEditPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: themeProvider.cardColor,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: themeProvider.shadowColor,
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -338,11 +357,12 @@ class _EventEditPageState extends State<EventEditPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Event Color',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: themeProvider.textColor,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -362,15 +382,12 @@ class _EventEditPageState extends State<EventEditPage> {
                               color: color,
                               shape: BoxShape.circle,
                               border: isSelected
-                                  ? Border.all(
-                                      color: Colors.white,
-                                      width: 3,
-                                    )
+                                  ? Border.all(color: Colors.white, width: 3)
                                   : null,
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
-                                        color: color.withOpacity(0.5),
+                                        color: color.withValues(alpha: 0.5),
                                         blurRadius: 8,
                                         spreadRadius: 2,
                                       ),
@@ -381,6 +398,69 @@ class _EventEditPageState extends State<EventEditPage> {
                         );
                       }).toList(),
                     ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Reminder Selection
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: themeProvider.cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: themeProvider.shadowColor,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Reminder',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: themeProvider.textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ..._reminderOptions.map((option) {
+                      final isSelected = _selectedReminder == option['value'];
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() => _selectedReminder = option['value']);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isSelected
+                                    ? Icons.radio_button_checked
+                                    : Icons.radio_button_unchecked,
+                                color: isSelected
+                                    ? themeProvider.accentColor
+                                    : themeProvider.subtitleColor,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                option['label'] as String,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: themeProvider.textColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ],
                 ),
               ),
@@ -425,15 +505,15 @@ class _EventEditPageState extends State<EventEditPage> {
     String? Function(String?)? validator,
   }) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: themeProvider.shadowColor,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -442,9 +522,11 @@ class _EventEditPageState extends State<EventEditPage> {
       child: TextFormField(
         controller: controller,
         maxLines: maxLines,
+        style: TextStyle(color: themeProvider.textColor),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
+          hintStyle: TextStyle(color: themeProvider.subtitleColor),
           prefixIcon: Icon(icon, color: themeProvider.accentColor),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
@@ -463,9 +545,9 @@ class _EventEditPageState extends State<EventEditPage> {
     required VoidCallback onTap,
   }) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Material(
-      color: Colors.grey[50],
+      color: themeProvider.cardColor,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
@@ -474,7 +556,7 @@ class _EventEditPageState extends State<EventEditPage> {
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
+            border: Border.all(color: themeProvider.dividerColor),
           ),
           child: Column(
             children: [
@@ -482,18 +564,19 @@ class _EventEditPageState extends State<EventEditPage> {
               const SizedBox(height: 4),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
-                  color: Colors.grey,
+                  color: themeProvider.subtitleColor,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
+                  color: themeProvider.textColor,
                 ),
               ),
             ],
@@ -504,15 +587,26 @@ class _EventEditPageState extends State<EventEditPage> {
   }
 
   void _deleteEvent() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Event'),
-        content: const Text('Are you sure you want to delete this event?'),
+        backgroundColor: themeProvider.cardColor,
+        title: Text(
+          'Delete Event',
+          style: TextStyle(color: themeProvider.textColor),
+        ),
+        content: Text(
+          'Are you sure you want to delete this event?',
+          style: TextStyle(color: themeProvider.textColor),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: themeProvider.accentColor),
+            ),
           ),
           TextButton(
             onPressed: () {

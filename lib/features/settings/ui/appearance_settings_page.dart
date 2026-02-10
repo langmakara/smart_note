@@ -173,7 +173,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                     onChanged: (value) {
                       _updateSettings(_settings.copyWith(showGridLines: value));
                     },
-                    activeColor: themeProvider.accentColor,
+                    activeThumbColor: themeProvider.accentColor,
                   ),
                 ),
                 Divider(color: themeProvider.dividerColor),
@@ -193,7 +193,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                     onChanged: (value) {
                       _updateSettings(_settings.copyWith(compactMode: value));
                     },
-                    activeColor: Colors.blue,
+                    activeThumbColor: Colors.blue,
                   ),
                 ),
               ],
@@ -252,7 +252,7 @@ class _AppearanceSettingsPageState extends State<AppearanceSettingsPage> {
                         ),
                       );
                     },
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ),
               ],

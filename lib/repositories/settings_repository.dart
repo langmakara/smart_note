@@ -11,17 +11,22 @@ class SettingsRepository {
   // Save settings
   Future<void> save(AppSettings settings) async {
     final settingsMap = settings.toMap();
+    final db = await _db.database;
     
-    // Delete existing settings first
-    await _db.delete(_tableName, '1 = ?', [1]);
-    
-    // Insert all settings as key-value pairs
-    for (var entry in settingsMap.entries) {
-      await _db.insert(
-        _tableName,
-        {'key': entry.key, 'value': entry.value.toString()},
-      );
-    }
+    await db.transaction((txn) async {
+      // Delete all existing settings
+      await txn.delete(_tableName);
+      
+      // Insert all settings as key-value pairs
+      final batch = txn.batch();
+      for (var entry in settingsMap.entries) {
+        batch.insert(
+          _tableName,
+          {'key': entry.key, 'value': entry.value.toString()},
+        );
+      }
+      await batch.commit(noResult: true);
+    });
   }
 
   // Load settings

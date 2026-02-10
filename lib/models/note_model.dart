@@ -26,7 +26,7 @@ class Note {
       'content': content,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
-      'color': color.value,
+      'color': color.toARGB32(),
       'isPinned': isPinned,
     };
   }
@@ -37,7 +37,9 @@ class Note {
       title: map['title'],
       content: map['content'],
       createdAt: DateTime.parse(map['createdAt']),
-      updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
+      updatedAt: map['updatedAt'] != null
+          ? DateTime.parse(map['updatedAt'])
+          : null,
       color: Color(map['color']),
       isPinned: map['isPinned'] ?? false,
     );
@@ -50,7 +52,7 @@ class Note {
       'content': content,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
-      'color': color.value,
+      'color': color.toARGB32(),
       'isPinned': isPinned,
     };
   }
@@ -61,7 +63,9 @@ class Note {
       title: json['title'],
       content: json['content'],
       createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : null,
       color: Color(json['color']),
       isPinned: json['isPinned'] ?? false,
     );
