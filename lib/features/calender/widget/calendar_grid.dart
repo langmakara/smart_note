@@ -46,15 +46,19 @@ class CalendarGrid extends StatelessWidget {
 
         final dayNumber = index - leadingEmpty + 1;
         final date = DateTime(focusedMonth.year, focusedMonth.month, dayNumber);
-        final isToday = today.year == focusedMonth.year &&
+        final isToday =
+            today.year == focusedMonth.year &&
             today.month == focusedMonth.month &&
             today.day == dayNumber;
-        final isSelected = selectedDate != null &&
+        final isSelected =
+            selectedDate != null &&
             selectedDate!.year == focusedMonth.year &&
             selectedDate!.month == focusedMonth.month &&
             selectedDate!.day == dayNumber;
 
-        final dayEvents = events.where((event) => event.isOnDate(date)).toList();
+        final dayEvents = events
+            .where((event) => event.isOnDate(date))
+            .toList();
 
         return GestureDetector(
           onTap: () {
@@ -69,31 +73,36 @@ class CalendarGrid extends StatelessWidget {
               color: isSelected
                   ? themeProvider.accentColor
                   : isToday
-                      ? Colors.blueAccent.withValues(alpha: 0.15)
-                      : themeProvider.searchFillColor,
+                  ? Colors.blueAccent.withValues(alpha: 0.15)
+                  : themeProvider.searchFillColor,
               borderRadius: BorderRadius.circular(10),
               border: isSelected
                   ? Border.all(color: themeProvider.accentColor, width: 2)
                   : isToday
-                      ? Border.all(color: Colors.blueAccent.withValues(alpha: 0.5), width: 1.5)
-                      : Border.all(color: themeProvider.dividerColor, width: 0.5),
+                  ? Border.all(
+                      color: Colors.blueAccent.withValues(alpha: 0.5),
+                      width: 1.5,
+                    )
+                  : Border.all(color: themeProvider.dividerColor, width: 0.5),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: themeProvider.accentColor.withValues(alpha: 0.25),
+                        color: themeProvider.accentColor.withValues(
+                          alpha: 0.25,
+                        ),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),
                     ]
                   : isToday
-                      ? [
-                          BoxShadow(
-                            color: Colors.blueAccent.withValues(alpha: 0.15),
-                            blurRadius: 6,
-                            spreadRadius: 0.5,
-                          ),
-                        ]
-                      : null,
+                  ? [
+                      BoxShadow(
+                        color: Colors.blueAccent.withValues(alpha: 0.15),
+                        blurRadius: 6,
+                        spreadRadius: 0.5,
+                      ),
+                    ]
+                  : null,
             ),
             child: Stack(
               children: [
@@ -102,18 +111,20 @@ class CalendarGrid extends StatelessWidget {
                     '$dayNumber',
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.w600,
+                      fontWeight: isToday || isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w600,
                       color: isSelected
                           ? Colors.white
                           : isToday
-                              ? Colors.blueAccent
-                              : themeProvider.textColor,
+                          ? Colors.blueAccent
+                          : themeProvider.textColor,
                     ),
                   ),
                 ),
                 if (dayEvents.isNotEmpty)
                   Positioned(
-                    bottom: 2,
+                    bottom: 1,
                     left: 0,
                     right: 0,
                     child: Row(
@@ -122,9 +133,11 @@ class CalendarGrid extends StatelessWidget {
                           .take(3)
                           .map(
                             (event) => Container(
-                              width: 5,
-                              height: 5,
-                              margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                              width: 4,
+                              height: 4,
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 0.5,
+                              ),
                               decoration: BoxDecoration(
                                 color: isSelected ? Colors.white : event.color,
                                 shape: BoxShape.circle,

@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widget/note_card.dart';
 import '../widget/todo_card.dart';
+import '../widget/modern_note_bottom_sheet.dart';
+import '../widget/modern_todo_bottom_sheet.dart';
+import '../widget/note_detail_sheet.dart';
+import '../widget/todo_detail_sheet.dart';
 import '../../../models/note_model.dart';
 import '../../../models/todo_model.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../services/note_storage.dart';
 import '../../../services/todo_storage.dart';
-import 'note_edit_page.dart';
-import 'todo_edit_page.dart';
+import '../../../services/toast_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -145,91 +148,56 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _addNote() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => NoteEditPage(
-          onSave: (title, content, color) {
-            final newNote = Note(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              title: title,
-              content: content,
-              createdAt: DateTime.now(),
-              color: color,
-            );
-            return newNote;
-          },
-        ),
+    final result = await showModalBottomSheet<Note>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (context) => const ModernNoteBottomSheet(),
     );
 
     if (result != null && mounted) {
-      await NoteStorage.instance.create(result);
       setState(() {
         _notes.insert(0, result);
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Note created!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
     }
   }
 
   Future<void> _addTodo() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TodoEditPage(
-          onSave: (title, description, color) {
-            final newTodo = Todo(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              title: title,
-              description: description,
-              createdAt: DateTime.now(),
-              color: color,
-            );
-            return newTodo;
-          },
-        ),
+    final result = await showModalBottomSheet<Todo>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (context) => const ModernTodoBottomSheet(),
     );
 
     if (result != null && mounted) {
-      await TodoStorage.instance.create(result);
       setState(() {
         _todos.insert(0, result);
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('To-Do created!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
     }
   }
 
   Future<void> _editNote(Note note) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => NoteEditPage(
-          note: note,
-          onSave: (title, content, color) {
-            final updatedNote = note.copyWith(
-              title: title,
-              content: content,
-              color: color,
-              updatedAt: DateTime.now(),
-            );
-            return updatedNote;
-          },
-        ),
+    final result = await showModalBottomSheet<Note>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => ModernNoteBottomSheet(
+        note: note,
+        onNoteUpdated: (updatedNote) {
+          setState(() {
+            final index = _notes.indexWhere((n) => n.id == note.id);
+            if (index != -1) {
+              _notes[index] = updatedNote;
+            }
+          });
+        },
       ),
     );
 
@@ -241,34 +209,17 @@ class _HomePageState extends State<HomePage> {
           _notes[index] = result;
         }
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Note updated!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
     }
   }
 
   Future<void> _editTodo(Todo todo) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TodoEditPage(
-          todo: todo,
-          onSave: (title, description, color) {
-            final updatedTodo = todo.copyWith(
-              title: title,
-              description: description,
-              color: color,
-              updatedAt: DateTime.now(),
-            );
-            return updatedTodo;
-          },
-        ),
+    final result = await showModalBottomSheet<Todo>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (context) => ModernTodoBottomSheet(todo: todo),
     );
 
     if (result != null && mounted) {
@@ -279,14 +230,6 @@ class _HomePageState extends State<HomePage> {
           _todos[index] = result;
         }
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('To-Do updated!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
     }
   }
 
@@ -294,7 +237,14 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Delete Note"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.delete_outline, color: Colors.red),
+            SizedBox(width: 12),
+            Text("Delete Note"),
+          ],
+        ),
         content: const Text("Are you sure you want to delete this note?"),
         actions: [
           TextButton(
@@ -309,15 +259,8 @@ class _HomePageState extends State<HomePage> {
                 _notes.removeWhere((note) => note.id == noteId);
               });
               if (!mounted) return;
-              // ignore: use_build_context_synchronously
               Navigator.pop(dialogContext);
-              // ignore: use_build_context_synchronously
-              ScaffoldMessenger.of(dialogContext).showSnackBar(
-                const SnackBar(
-                  content: Text("Note deleted"),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              ToastService.showError(message: 'Note deleted');
             },
             child: const Text("Delete", style: TextStyle(color: Colors.red)),
           ),
@@ -327,81 +270,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _viewNote(Note note) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      isScrollControlled: true,
-      builder: (context) => _buildNoteViewSheet(note),
-    );
-  }
-
-  Widget _buildNoteViewSheet(Note note) {
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    return Container(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  note.title.isEmpty ? "Untitled" : note.title,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: note.color,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.close, color: themeProvider.subtitleColor),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Text(
-              note.content.isEmpty ? "No content" : note.content,
-              style: TextStyle(
-                fontSize: 16,
-                height: 1.6,
-                color: themeProvider.textColor,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _editNote(note);
-                  },
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Edit'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: themeProvider.accentColor,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              IconButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _deleteNote(note.id);
-                },
-                icon: const Icon(Icons.delete, color: Colors.red),
-              ),
-            ],
-          ),
-        ],
-      ),
+    showNoteDetailSheet(
+      context,
+      note,
+      onEdit: () => _editNote(note),
+      onDelete: () => _deleteNote(note.id),
     );
   }
 
@@ -471,115 +344,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _viewTodo(Todo todo) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      isScrollControlled: true,
-      builder: (context) => _buildTodoViewSheet(todo),
-    );
-  }
-
-  Widget _buildTodoViewSheet(Todo todo) {
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    return Container(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  todo.title.isEmpty ? "Untitled" : todo.title,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: todo.isCompleted ? Colors.grey : todo.color,
-                    decoration: todo.isCompleted
-                        ? TextDecoration.lineThrough
-                        : null,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.close, color: themeProvider.subtitleColor),
-              ),
-            ],
-          ),
-          if (todo.description.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              todo.description,
-              style: TextStyle(fontSize: 16, color: themeProvider.textColor),
-            ),
-          ],
-          if (todo.items.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            Text(
-              'Items (${todo.completedItems}/${todo.totalItems})',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: themeProvider.textColor,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...todo.items.map(
-              (item) => ListTile(
-                leading: Icon(
-                  item.isCompleted
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
-                  color: item.isCompleted
-                      ? Colors.green
-                      : themeProvider.subtitleColor,
-                ),
-                title: Text(
-                  item.text,
-                  style: TextStyle(
-                    color: item.isCompleted
-                        ? Colors.grey
-                        : themeProvider.textColor,
-                    decoration: item.isCompleted
-                        ? TextDecoration.lineThrough
-                        : null,
-                  ),
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _editTodo(todo);
-                  },
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Edit'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: themeProvider.accentColor,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              IconButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _deleteTodo(todo.id);
-                },
-                icon: const Icon(Icons.delete, color: Colors.red),
-              ),
-            ],
-          ),
-        ],
-      ),
+    showTodoDetailSheet(
+      context,
+      todo,
+      onEdit: () => _editTodo(todo),
+      onDelete: () => _deleteTodo(todo.id),
+      onToggleItem: () => _toggleTodoDone(todo),
     );
   }
 

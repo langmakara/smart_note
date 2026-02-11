@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/event_model.dart';
 import '../../../providers/theme_provider.dart';
+import '../../../services/event_storage.dart';
+import '../../../services/notification_service.dart';
+import '../../../services/toast_service.dart';
 import '../widget/event_card.dart';
-import 'event_edit_page.dart';
+import '../../../features/home/widget/modern_event_bottom_sheet.dart';
+import '../../../features/home/widget/event_detail_sheet.dart';
 
 class EventsListPage extends StatefulWidget {
   final List<Event> events;
@@ -79,36 +83,61 @@ class _EventsListPageState extends State<EventsListPage> {
       ),
       body: Column(
         children: [
-          // Search and Filter Bar
           Container(
             padding: const EdgeInsets.all(16),
             color: themeProvider.cardColor,
             child: Column(
               children: [
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search events...',
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: themeProvider.subtitleColor,
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search events...',
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: themeProvider.subtitleColor,
+                          ),
+                          filled: true,
+                          fillColor: themeProvider.searchFillColor,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() => _searchQuery = value);
+                        },
+                      ),
                     ),
-                    filled: true,
-                    fillColor: themeProvider.searchFillColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
-                  onChanged: (value) {
-                    setState(() => _searchQuery = value);
-                  },
+                    if (widget.selectedDate != null &&
+                        _filteredEvents.isNotEmpty)
+                      const SizedBox(width: 12),
+                    if (widget.selectedDate != null &&
+                        _filteredEvents.isNotEmpty)
+                      IconButton(
+                        onPressed: () => _confirmDeleteAllForDate(),
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.delete_sweep,
+                            color: Colors.red,
+                            size: 20,
+                          ),
+                        ),
+                        tooltip: 'Delete all events for this day',
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 12),
-                // Color Filter
                 Row(
                   children: [
                     Text(
@@ -161,7 +190,6 @@ class _EventsListPageState extends State<EventsListPage> {
               ],
             ),
           ),
-          // Events List
           Expanded(
             child: _filteredEvents.isEmpty
                 ? Center(
@@ -208,7 +236,6 @@ class _EventsListPageState extends State<EventsListPage> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Date Header
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -238,13 +265,12 @@ class _EventsListPageState extends State<EventsListPage> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          // Events for this date
                           ...events.map(
                             (event) => Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: EventCard(
                                 event: event,
-                                onTap: () => _editEvent(context, event),
+                                onTap: () => _viewEvent(context, event),
                                 onDelete: () => _confirmDelete(event),
                               ),
                             ),
@@ -358,50 +384,65 @@ class _EventsListPageState extends State<EventsListPage> {
   }
 
   void _addEvent(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EventEditPage(
-          selectedDate: widget.selectedDate,
-          onSave: (event) {
-            widget.onAddEvent(event);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Event "${event.title}" created!'),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            );
-          },
-        ),
+    showModalBottomSheet<Event>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => ModernEventBottomSheet(
+        selectedDate: widget.selectedDate,
+        onEventCreated: (event) async {
+          await EventStorage.instance.create(event);
+          await NotificationService.instance.scheduleEventReminder(event);
+          widget.onAddEvent(event);
+          ToastService.showSuccess(message: 'Event "${event.title}" created!');
+        },
       ),
     );
   }
 
-  void _editEvent(BuildContext context, Event event) {
-    Navigator.push(
+  void _viewEvent(BuildContext context, Event event) {
+    showEventDetailSheet(
       context,
-      MaterialPageRoute(
-        builder: (context) => EventEditPage(
-          event: event,
-          onSave: (updatedEvent) {
-            widget.onEditEvent(updatedEvent);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Event "${updatedEvent.title}" updated!'),
-                backgroundColor: Colors.blue,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            );
-          },
-        ),
+      event,
+      onEdit: () => _editEvent(context, event),
+      onDelete: () => _confirmDelete(event),
+      onToggleDone: () => _toggleDone(event),
+    );
+  }
+
+  void _editEvent(BuildContext context, Event event) {
+    showModalBottomSheet<Event>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (context) => ModernEventBottomSheet(
+        event: event,
+        selectedDate: widget.selectedDate,
+        onEventCreated: (updatedEvent) async {
+          await EventStorage.instance.update(updatedEvent);
+          await NotificationService.instance.cancelEventReminder(event.id);
+          await NotificationService.instance.scheduleEventReminder(
+            updatedEvent,
+          );
+          widget.onEditEvent(updatedEvent);
+          ToastService.showSuccess(message: 'Event updated!');
+        },
+      ),
+    );
+  }
+
+  void _toggleDone(Event event) async {
+    final updatedEvent = event.copyWith(isDone: !event.isDone);
+    await EventStorage.instance.update(updatedEvent);
+    widget.onEditEvent(updatedEvent);
+    ToastService.showSuccess(
+      message: updatedEvent.isDone
+          ? 'Event marked as done!'
+          : 'Event marked as undone!',
     );
   }
 
@@ -409,7 +450,14 @@ class _EventsListPageState extends State<EventsListPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Event'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.delete_outline, color: Colors.red),
+            SizedBox(width: 12),
+            Text('Delete Event'),
+          ],
+        ),
         content: Text('Are you sure you want to delete "${event.title}"?'),
         actions: [
           TextButton(
@@ -417,19 +465,14 @@ class _EventsListPageState extends State<EventsListPage> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
+            onPressed: () async {
+              await EventStorage.instance.delete(event.id);
+              await NotificationService.instance.cancelEventReminder(event.id);
               widget.onDeleteEvent(event.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Event "${event.title}" deleted'),
-                  backgroundColor: Colors.red,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              );
+              if (mounted) {
+                Navigator.pop(context);
+                ToastService.showError(message: 'Event deleted');
+              }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),
@@ -437,5 +480,62 @@ class _EventsListPageState extends State<EventsListPage> {
         ],
       ),
     );
+  }
+
+  void _confirmDeleteAllForDate() {
+    final dateEvents = _filteredEvents;
+    final dateText = widget.selectedDate != null
+        ? _formatDate(widget.selectedDate!)
+        : 'this filter';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.delete_sweep, color: Colors.red),
+            ),
+            const SizedBox(width: 12),
+            const Text('Delete All Events'),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to delete all ${dateEvents.length} events for $dateText? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteAllForDate();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete All'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteAllForDate() async {
+    final dateEvents = _filteredEvents;
+
+    for (final event in dateEvents) {
+      await EventStorage.instance.delete(event.id);
+      await NotificationService.instance.cancelEventReminder(event.id);
+      widget.onDeleteEvent(event.id);
+    }
+
+    ToastService.showError(message: '${dateEvents.length} events deleted');
   }
 }

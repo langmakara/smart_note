@@ -1,18 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'config/main_wrapper.dart';
-import 'features/auth/ui/login_page.dart';
+import 'features/settings/ui/security_page.dart';
 import 'providers/theme_provider.dart';
+import 'providers/backup_provider.dart';
 import 'services/app_initialization.dart';
+import 'services/auth_service.dart';
 import 'services/google_drive_service.dart';
 import 'services/notification_service.dart';
+import 'services/security_service.dart';
+import 'services/toast_service.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Hive.initFlutter();
+  await SecurityService.instance.init();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider(create: (context) => AuthService()),
         ChangeNotifierProvider(create: (context) => GoogleDriveService()),
+        ChangeNotifierProvider(create: (context) => BackupProvider()),
       ],
       child: const MyApp(),
     ),
@@ -28,7 +40,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool _isInitialized = false;
-  bool _showLogin = true;
+  bool _isUnlocked = false;
 
   @override
   void initState() {
@@ -38,43 +50,52 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _initializeApp() async {
     final appContext = context;
+
     await AppInitialization.initialize(appContext);
-    if (mounted) {
-      final themeProvider = Provider.of<ThemeProvider>(
-        // ignore: use_build_context_synchronously
-        appContext,
-        listen: false,
-      );
-      await themeProvider.init();
-      if (!mounted) return;
+    if (!mounted) return;
 
-      final driveService = Provider.of<GoogleDriveService>(
-        // ignore: use_build_context_synchronously
-        appContext,
-        listen: false,
-      );
-      driveService.initialize(
-        webClientId: 'YOUR_ACTUAL_WEB_CLIENT_ID.apps.googleusercontent.com',
-        iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',
-      );
+    final themeProvider = Provider.of<ThemeProvider>(appContext, listen: false);
+    await themeProvider.init();
+    if (!mounted) return;
 
-      await NotificationService.instance.initialize();
+    final authService = Provider.of<AuthService>(appContext, listen: false);
+    await authService.initialize();
 
+    final driveService = Provider.of<GoogleDriveService>(
+      appContext,
+      listen: false,
+    );
+    driveService.initialize(
+      webClientId: 'YOUR_ACTUAL_WEB_CLIENT_ID.apps.googleusercontent.com',
+      iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',
+    );
+
+    final backupProvider = Provider.of<BackupProvider>(
+      appContext,
+      listen: false,
+    );
+    await backupProvider.init();
+
+    await NotificationService.instance.initialize();
+
+    if (!mounted) return;
+
+    final securityEnabled = SecurityService.instance.isPasswordEnabled();
+    if (securityEnabled) {
       setState(() {
         _isInitialized = true;
+      });
+    } else {
+      setState(() {
+        _isInitialized = true;
+        _isUnlocked = true;
       });
     }
   }
 
-  void _handleLoginSuccess() {
+  void _handleUnlockSuccess() {
     setState(() {
-      _showLogin = false;
-    });
-  }
-
-  void _handleSkip() {
-    setState(() {
-      _showLogin = false;
+      _isUnlocked = true;
     });
   }
 
@@ -87,22 +108,26 @@ class _MyAppState extends State<MyApp> {
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
       themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: _showLogin
-          ? LoginPage(onLoginSuccess: _handleLoginSuccess, onSkip: _handleSkip)
-          : _isInitialized
-          ? const MainWrapper()
-          : const Scaffold(
+      scaffoldMessengerKey: ToastService.scaffoldKey,
+      home: !_isInitialized
+          ? const Scaffold(
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(),
                     SizedBox(height: 20),
-                    Text('Initializing database...'),
+                    Text('Loading...'),
                   ],
                 ),
               ),
-            ),
+            )
+          : SecurityService.instance.isPasswordEnabled() && !_isUnlocked
+          ? SecurityPage(
+              mode: SecurityPageMode.verify,
+              onVerifySuccess: _handleUnlockSuccess,
+            )
+          : const MainWrapper(),
     );
   }
 }

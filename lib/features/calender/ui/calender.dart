@@ -4,8 +4,9 @@ import '../../../models/event_model.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../services/event_storage.dart';
 import '../../../services/notification_service.dart';
+import '../../../services/toast_service.dart';
+import '../../../features/home/widget/modern_event_bottom_sheet.dart';
 import '../widget/calendar_grid.dart';
-import 'event_edit_page.dart';
 import 'events_list_page.dart';
 
 class CalendarPage extends StatefulWidget {
@@ -78,28 +79,20 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   void _addEvent(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EventEditPage(
-          selectedDate: _selectedDate,
-          onSave: (event) async {
-            await EventStorage.instance.create(event);
-            await NotificationService.instance.scheduleEventReminder(event);
-            setState(() => _events.add(event));
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                duration: Duration(seconds: 1),
-                content: Text('Event "${event.title}" created!'),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            );
-          },
-        ),
+    showModalBottomSheet<Event>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => ModernEventBottomSheet(
+        selectedDate: _selectedDate,
+        onEventCreated: (event) async {
+          await EventStorage.instance.create(event);
+          await NotificationService.instance.scheduleEventReminder(event);
+          setState(() => _events.add(event));
+          ToastService.showSuccess(message: 'Event "${event.title}" created!');
+        },
       ),
     );
   }

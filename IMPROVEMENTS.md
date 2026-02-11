@@ -195,3 +195,516 @@ All changes have been verified with `flutter analyze`:
 ---
 
 **Status**: ✅ All improvements completed successfully!
+
+---
+
+## 🚀 NEW: Google Drive Backup UI/UX Improvements (Added Feb 2025)
+
+### Files Added
+
+#### 1. Backup Provider (`lib/providers/backup_provider.dart`)
+- **State Management**: Dedicated provider for backup operations
+- **Features**:
+  - Backup progress tracking (0.0 - 1.0)
+  - Last backup timestamp tracking
+  - Backup status states (idle, preparing, uploading, verifying, success, error, restoring)
+  - Storage information management (notes count, todos count, total size)
+  - Auto backup settings integration
+  - Status color and icon helpers
+
+#### 2. Google Drive Backup Page (`lib/features/settings/ui/google_drive_backup_page.dart`)
+- **Enhanced UI**: Complete redesign of backup interface
+- **Features**:
+  - Visual connection status with verified badge
+  - Real-time backup progress with animated progress bar
+  - Last backup timestamp with relative time formatting (Just now, 5 min ago, etc.)
+  - One-tap backup button with loading state
+  - Auto backup toggle with descriptive text
+  - Storage information display
+  - Backup history section (placeholder for future implementation)
+  - Smooth animations and transitions
+  - Dark mode support
+
+#### 3. Enhanced Data Management Page (`lib/features/settings/ui/data_management_page.dart`)
+- **UI Overhaul**: Modern card-based design
+- **Improvements**:
+  - Section headers for better organization
+  - Google Drive card with connection status and last backup time
+  - Improved export/import buttons with icons
+  - Storage information with color-coded items
+  - Redesigned danger zone with warning icon
+  - Better snackbar notifications with icons and action buttons
+  - Enhanced accessibility and visual hierarchy
+
+#### 4. Skeleton Loader (`lib/features/home/widget/skeleton_loader.dart`)
+- **Loading States**: Professional shimmer effect for better UX
+- **Components**:
+  - `SkeletonLoader`: Base shimmer widget with animation
+  - `SkeletonNoteCard`: Loading placeholder for note cards
+  - `SkeletonListView`: Loading list with multiple skeleton cards
+  - `SkeletonButton`: Loading button placeholder
+  - `SkeletonAvatar`: Loading avatar placeholder
+  - Custom shimmer animation without external dependencies
+
+#### 5. Toast Service (`lib/services/toast_service.dart`)
+- **User Feedback**: Professional notification system
+- **Features**:
+  - Success, error, warning, and info toast notifications
+  - Backup progress notifications with percentage
+  - Backup complete and sync complete notifications
+  - Action buttons with callbacks
+  - Consistent styling across all notifications
+  - Auto-dismiss with configurable duration
+
+### UI/UX Improvements
+
+#### Backup Interface
+- ✅ Clear visual progress indicator during sync
+- ✅ Status badges (synced, pending, error) on cards
+- ✅ Last sync timestamp prominently displayed
+- ✅ One-tap manual backup button
+- ✅ Animated progress bar with percentage
+- ✅ Relative time formatting for better readability
+
+#### Trust Indicators
+- ✅ Backup confirmation toasts with icons
+- ✅ Error states with retry action buttons
+- ✅ Verification status display
+- ✅ Connection verified badge
+- ✅ Clear status messages
+
+#### Navigation
+- ✅ Dedicated Google Drive Backup settings page
+- ✅ Quick access from Data Management
+- ✅ Visual confirmation during operations
+- ✅ Section-based organization
+
+#### Design Polish
+- ✅ Consistent iconography for sync states
+- ✅ Skeleton loaders while checking connection
+- ✅ Dark mode support throughout
+- ✅ Accessible color contrast
+- ✅ Smooth animations and transitions
+- ✅ Card-based modern design
+- ✅ Color-coded storage information
+
+### Code Improvements
+
+#### Backup Provider
+```dart
+- Proper state management with ChangeNotifier
+- Getters for formatted timestamps
+- Progress tracking methods
+- Status state management
+- Integration with existing settings
+```
+
+#### Enhanced Services
+```dart
+- ToastService for consistent notifications
+- BackupProvider for backup state
+- Improved error handling with user-friendly messages
+```
+
+### User Experience Flow
+
+1. **Backup Process**:
+   - User taps "Backup Now"
+   - Progress bar appears with percentage
+   - Status changes: Preparing → Uploading → Verifying → Success
+   - Toast notification on completion
+   - Last backup timestamp updates
+
+2. **Connection Flow**:
+   - User sees connection status
+   - Taps "Sign in with Google"
+   - After authentication, sees verified badge
+   - Can access advanced backup settings
+
+3. **Error Handling**:
+   - Failed backup shows error toast
+   - Retry action button available
+   - Clear error message displayed
+
+4. **Loading States**:
+   - Skeleton loaders during data fetch
+   - Progress indicator during backup
+   - Loading spinner on buttons
+
+### Accessibility Improvements
+- Clear status messages
+- High contrast colors for status indicators
+- Descriptive icons for all states
+- Actionable error messages
+- Progress indicators with percentages
+
+### Performance Considerations
+- Efficient state management with Provider
+- Minimal rebuilds with proper Consumer widgets
+- Smooth animations (60fps)
+- No external dependencies for shimmer effect
+
+### Future Enhancements (Roadmap)
+1. Backup history with list of previous backups
+2. Restore from backup functionality
+3. Selective backup (notes only, todos only)
+4. Backup scheduling options
+5. Cloud storage quota display
+6. Backup file size information
+7. Automatic backup on app start
+8. Cross-device sync notifications
+
+---
+
+## 🚀 NEW: Modern Creation UI/UX (Added Feb 2025)
+
+### Overview
+Transformed the creation experience from full-screen forms to modern, context-aware bottom sheets similar to Google Keep and Notion.
+
+### Files Added/Modified
+
+#### 1. Modern Note Bottom Sheet (`lib/features/home/widget/modern_note_bottom_sheet.dart`)
+- **Modal Bottom Sheet Design**: Replaces full-screen NoteEditPage
+- **Features**:
+  - Auto-focus on title field when opened
+  - Large, borderless title input (24px bold)
+  - Multi-line content area with clean styling
+  - Choice Chips for categorization:
+    - Personal (👤)
+    - Work (💼)
+    - Home (🏠)
+    - Shopping (🛍️)
+    - Ideas (💡)
+    - Important (⭐)
+  - 8-color palette picker with animated selection
+  - Haptic feedback on interactions
+  - Delete option for existing notes
+  - Smooth drag handle for sheet control
+  - Keyboard-aware padding (pushes up when keyboard opens)
+
+#### 2. Modern Todo Bottom Sheet (`lib/features/home/widget/modern_todo_bottom_sheet.dart`)
+- **Modal Bottom Sheet Design**: Replaces full-screen TodoEditPage
+- **Features**:
+  - Auto-focus on title field
+  - Title and description inputs
+  - Priority selector with Choice Chips:
+    - Low (⬇️) - Green
+    - Medium (➖) - Blue
+    - High (⬆️) - Orange
+    - Urgent (⚠️) - Red
+  - Interactive checklist with add/remove items
+  - Progress indicator (completed/total)
+  - 8-color palette picker
+  - Haptic feedback on all interactions
+  - Delete option for existing todos
+
+#### 3. Enhanced Home Page (`lib/features/home/ui/home.dart`)
+- **Updated**:
+  - Replaced NoteEditPage navigation with ModernNoteBottomSheet
+  - Replaced TodoEditPage navigation with ModernTodoBottomSheet
+  - Integrated ToastService for better feedback
+  - Removed full-screen navigation for faster creation
+
+### Model Updates
+
+#### Note Model (`lib/models/note_model.dart`)
+- **Added**: `category` field (default: 'Personal')
+- **Updated**: All serialization methods to include category
+
+#### Todo Model (`lib/models/todo_model.dart`)
+- **Added**: `priority` field (default: 'Medium')
+- **Updated**: All serialization methods to include priority
+
+### UI/UX Improvements
+
+#### Bottom Sheet Design
+- Rounded top corners (24px radius)
+- Subtle drop shadow for depth
+- Drag handle for easy control
+- Keyboard-aware padding
+- Smooth slide-in animation
+
+#### Input Experience
+- Borderless inputs for minimalist look
+- Large title font (24px bold)
+- Placeholder text with subtle colors
+- Auto-focus on title field
+- TextInputAction.next for navigation
+
+#### Choice Chips
+- Visual icons for each category/priority
+- Color-coded selection states
+- Smooth tap animations
+- Haptic feedback on selection
+- Rounded pill shape (18px radius)
+
+#### Color Picker
+- 8 vibrant color options
+- Animated selection indicator
+- Checkmark when selected
+- Subtle glow/shadow on selection
+- Consistent with app theme
+
+#### Haptic Feedback
+- Light impact on chip selection
+- Feedback on color selection
+- Confirmation on save/delete
+- Creates "physical" feel
+
+### User Flow Improvements
+
+#### Creating a Note
+1. Tap FAB → Bottom sheet slides up
+2. Auto-focus on title
+3. Type title and content
+4. Optional: Tap category chip
+5. Optional: Pick color
+6. Tap "Save" or swipe down
+7. Toast confirmation appears
+
+#### Creating a Todo
+1. Tap FAB → Select "To-Do" → Bottom sheet slides up
+2. Type title and description
+3. Optional: Select priority chip
+4. Optional: Add checklist items
+5. Optional: Pick color
+6. Tap "Add To-Do" or swipe down
+7. Toast confirmation appears
+
+### Design Patterns Used
+
+#### Modal Bottom Sheet
+```dart
+showModalBottomSheet(
+  context: context,
+  isScrollControlled: true, // Allows keyboard to push content
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+  ),
+  builder: (context) => ModernNoteBottomSheet(),
+)
+```
+
+#### Choice Chip
+```dart
+ChoiceChip(
+  avatar: Icon(Icons.work_outline, size: 16),
+  label: Text('Work'),
+  selected: isSelected,
+  selectedColor: themeColor,
+  onSelected: (selected) {
+    setState(() => _selectedCategory = 'Work');
+    _hapticFeedback();
+  },
+)
+```
+
+#### Haptic Feedback
+```dart
+Future<void> _hapticFeedback() async {
+  await HapticFeedback.lightImpact();
+}
+```
+
+### Accessibility Features
+- Auto-focus for keyboard users
+- Clear visual states for all interactions
+- Large touch targets (48px+)
+- High contrast text
+- Descriptive icons and labels
+- Haptic feedback for confirmation
+
+### Performance Considerations
+- Efficient rebuilds with minimal state changes
+- No external dependencies
+- Smooth 60fps animations
+- Lazy loading of sheet content
+- Proper FocusNode management
+
+### Comparison: Before vs After
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Navigation | Full screen push | Bottom sheet slide |
+| Category | Text input | Tap chips |
+| Priority | Not available | Tap chips |
+| Color | Limited options | 8 colors |
+| UX | Disconnected | Context-aware |
+| Speed | Slower | Instant |
+| Feel | Utility app | Modern app |
+
+### Future Enhancements (Creation)
+1. Rich text formatting (bold, italic, lists)
+2. Image attachment support
+3. Voice note recording
+4. Template system
+5. Collaborative editing
+6. URL preview generation
+7. Drawing/手書き support
+8. Document scanning
+
+---
+
+## 🚀 NEW: Modern Event Creation UI/UX (Added Feb 2025)
+
+### Overview
+Transformed the event creation experience from a full-screen form to a modern, context-aware bottom sheet with integrated date/time pickers, category chips, and intuitive controls.
+
+### Files Added/Modified
+
+#### 1. Modern Event Bottom Sheet (`lib/features/home/widget/modern_event_bottom_sheet.dart`)
+- **Modal Bottom Sheet Design**: Replaces full-screen EventEditPage
+- **Features**:
+  - Auto-focus on title field when opened
+  - Large, borderless title input (22px bold)
+  - Category Choice Chips with icons:
+    - General (📅)
+    - Meeting (👥)
+    - Birthday (🎂)
+    - Reminder (⏰)
+    - Workout (💪)
+    - Appointment (🏥)
+  - Integrated Date/Time Pickers:
+    - Date tile with formatted display (e.g., "Today", "15 Feb")
+    - Start and End time selection
+    - All-day event toggle with visual feedback
+  - Location input with icon
+  - Description field
+  - Reminder selector with pill-shaped chips:
+    - None (🔕)
+    - 15 min before (⏱️)
+    - 1 hour before (🕐)
+    - 1 day before (📆)
+  - 8-color palette picker
+  - Haptic feedback on interactions
+  - Delete option for existing events
+  - Smooth drag handle for sheet control
+  - Keyboard-aware padding
+
+#### 2. Enhanced Calendar Page (`lib/features/calender/ui/calender.dart`)
+- **Updated**:
+  - Replaced EventEditPage navigation with ModernEventBottomSheet
+  - Integrated ToastService for better feedback
+  - Removed full-screen navigation for faster event creation
+
+### UI/UX Improvements
+
+#### Bottom Sheet Design
+- Rounded top corners (24px radius)
+- Subtle drop shadow for depth
+- Drag handle for easy control
+- Keyboard-aware padding
+- Smooth slide-in animation
+
+#### Category Chips
+- 6 pre-defined event categories
+- Visual icons for quick recognition
+- Color-coded selection states
+- Smooth tap animations
+- Haptic feedback on selection
+- Pill shape (18px radius)
+
+#### Date/Time Section
+- Compact tile-based layout
+- Formatted date display (Today, Tomorrow, or date)
+- AM/PM time format
+- All-day toggle with visual states
+- Consistent styling with theme
+
+#### Reminder Selector
+- Pill-shaped chip design
+- Icon + label combination
+- Easy tap selection
+- Visual feedback on selection
+
+#### Color Picker
+- 8 vibrant color options
+- Animated selection indicator
+- Checkmark when selected
+- Subtle glow/shadow on selection
+- Consistent with note/todo color pickers
+
+### User Flow Improvements
+
+#### Creating an Event
+1. Tap "Add Event" → Bottom sheet slides up
+2. Auto-focus on title
+3. Type event title (required)
+4. Optional: Tap category chip
+5. Optional: Select date/time
+6. Toggle "All Day" if needed
+7. Optional: Add location
+8. Optional: Add description
+9. Optional: Set reminder
+10. Optional: Pick color
+11. Tap "Create" or swipe down
+12. Toast confirmation appears
+
+### Design Patterns Used
+
+#### Modal Bottom Sheet
+```dart
+showModalBottomSheet<Event>(
+  context: context,
+  isScrollControlled: true,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+  ),
+  builder: (context) => ModernEventBottomSheet(
+    selectedDate: _selectedDate,
+    onEventCreated: (event) {},
+  ),
+)
+```
+
+#### Category Chips
+```dart
+ChoiceChip(
+  avatar: Icon(Icons.groups, size: 16),
+  label: Text('Meeting'),
+  selected: isSelected,
+  selectedColor: themeColor,
+  onSelected: (selected) {
+    setState(() => _selectedCategory = 'Meeting');
+    _hapticFeedback();
+  },
+)
+```
+
+#### Reminder Pills
+```dart
+Container(
+  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  decoration: BoxDecoration(
+    color: isSelected ? color : Colors.transparent,
+    borderRadius: BorderRadius.circular(20),
+    border: Border.all(color: isSelected ? color : dividerColor),
+  ),
+  child: Row(
+    children: [
+      Icon(icon, size: 14, color: isSelected ? white : subtitleColor),
+      SizedBox(width: 6),
+      Text(label, style: TextStyle(fontSize: 12)),
+    ],
+  ),
+)
+```
+
+### Performance Considerations
+- Efficient rebuilds with minimal state changes
+- No external dependencies
+- Smooth 60fps animations
+- Proper FocusNode management
+- Lazy loading of sheet content
+
+### Comparison: Before vs After
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Navigation | Full screen push | Bottom sheet slide |
+| Categories | Not available | 6 tap chips with icons |
+| Date/Time | Separate pickers | Integrated tiles |
+| Reminder | Radio list | Pill chips |
+| UX | Disconnected | Context-aware |
+| Speed | Slower | Instant |
+| Feel | Utility app | Modern calendar app |

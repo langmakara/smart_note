@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'hive_database.dart';
 import 'note_storage.dart';
 import 'event_storage.dart';
-import 'security_service.dart';
 
 class AppInitialization {
   static bool _isInitialized = false;
@@ -17,7 +16,6 @@ class AppInitialization {
 
       await NoteStorage.instance.initialize();
       await EventStorage.instance.initialize();
-      await SecurityService.instance.init();
 
       _isInitialized = true;
       debugPrint('App initialization completed successfully');

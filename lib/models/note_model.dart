@@ -8,6 +8,7 @@ class Note {
   DateTime? updatedAt;
   Color color;
   bool isPinned;
+  String category;
 
   Note({
     required this.id,
@@ -17,6 +18,7 @@ class Note {
     this.updatedAt,
     this.color = Colors.purple,
     this.isPinned = false,
+    this.category = 'Personal',
   });
 
   Map<String, dynamic> toMap() {
@@ -28,6 +30,7 @@ class Note {
       'updatedAt': updatedAt?.toIso8601String(),
       'color': color.toARGB32(),
       'isPinned': isPinned,
+      'category': category,
     };
   }
 
@@ -42,6 +45,7 @@ class Note {
           : null,
       color: Color(map['color']),
       isPinned: map['isPinned'] ?? false,
+      category: map['category'] ?? 'Personal',
     );
   }
 
@@ -54,6 +58,7 @@ class Note {
       'updatedAt': updatedAt?.toIso8601String(),
       'color': color.toARGB32(),
       'isPinned': isPinned,
+      'category': category,
     };
   }
 
@@ -68,6 +73,7 @@ class Note {
           : null,
       color: Color(json['color']),
       isPinned: json['isPinned'] ?? false,
+      category: json['category'] ?? 'Personal',
     );
   }
 
@@ -77,6 +83,7 @@ class Note {
     DateTime? updatedAt,
     Color? color,
     bool? isPinned,
+    String? category,
   }) {
     return Note(
       id: id,
@@ -86,6 +93,7 @@ class Note {
       updatedAt: updatedAt ?? DateTime.now(),
       color: color ?? this.color,
       isPinned: isPinned ?? this.isPinned,
+      category: category ?? this.category,
     );
   }
 }

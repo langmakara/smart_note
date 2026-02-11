@@ -36,7 +36,12 @@ class EventCard extends StatelessWidget {
                 offset: const Offset(0, 2),
               ),
             ],
-            border: Border(left: BorderSide(color: event.color, width: 4)),
+            border: Border(
+              left: BorderSide(
+                color: event.isDone ? Colors.green : event.color,
+                width: 4,
+              ),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,16 +49,48 @@ class EventCard extends StatelessWidget {
             children: [
               Row(
                 children: [
+                  if (event.isDone)
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check, size: 12, color: Colors.green),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Done',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          event.title,
+                          event.title.isEmpty ? 'Untitled' : event.title,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: themeProvider.textColor,
+                            color: event.isDone
+                                ? themeProvider.subtitleColor
+                                : themeProvider.textColor,
+                            decoration: event.isDone
+                                ? TextDecoration.lineThrough
+                                : null,
                           ),
                         ),
                         if (event.description.isNotEmpty) ...[
@@ -73,7 +110,7 @@ class EventCard extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline, size: 20),
-                    color: themeProvider.subtitleColor,
+                    color: themeProvider.subtitleColor.withValues(alpha: 0.7),
                     onPressed: onDelete,
                   ),
                 ],
@@ -150,6 +187,10 @@ class EventCard extends StatelessWidget {
   }
 
   String _formatTime(DateTime time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    final hour = time.hour > 12
+        ? time.hour - 12
+        : (time.hour == 0 ? 12 : time.hour);
+    final period = time.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:${time.minute.toString().padLeft(2, '0')} $period';
   }
 }
