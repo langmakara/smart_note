@@ -32,13 +32,14 @@ class CalendarGrid extends StatelessWidget {
     final today = DateTime.now();
 
     return GridView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 7,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.1,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 1.2,
       ),
       itemCount: leadingEmpty + totalDays,
       itemBuilder: (context, index) {
@@ -60,93 +61,61 @@ class CalendarGrid extends StatelessWidget {
             .where((event) => event.isOnDate(date))
             .toList();
 
+        final isWeekend = date.weekday >= 6;
+
         return GestureDetector(
           onTap: () {
             if (onDateSelected != null) {
               onDateSelected!(date);
             }
           },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(6),
+          child: Container(
             decoration: BoxDecoration(
               color: isSelected
                   ? themeProvider.accentColor
                   : isToday
-                  ? Colors.blueAccent.withValues(alpha: 0.15)
-                  : themeProvider.searchFillColor,
-              borderRadius: BorderRadius.circular(10),
-              border: isSelected
-                  ? Border.all(color: themeProvider.accentColor, width: 2)
-                  : isToday
-                  ? Border.all(
-                      color: Colors.blueAccent.withValues(alpha: 0.5),
-                      width: 1.5,
-                    )
-                  : Border.all(color: themeProvider.dividerColor, width: 0.5),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: themeProvider.accentColor.withValues(
-                          alpha: 0.25,
-                        ),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : isToday
-                  ? [
-                      BoxShadow(
-                        color: Colors.blueAccent.withValues(alpha: 0.15),
-                        blurRadius: 6,
-                        spreadRadius: 0.5,
-                      ),
-                    ]
-                  : null,
+                  ? themeProvider.searchFillColor
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Stack(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Center(
-                  child: Text(
-                    '$dayNumber',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: isToday || isSelected
-                          ? FontWeight.bold
-                          : FontWeight.w600,
-                      color: isSelected
-                          ? Colors.white
-                          : isToday
-                          ? Colors.blueAccent
-                          : themeProvider.textColor,
-                    ),
+                Text(
+                  '$dayNumber',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isToday || isSelected
+                        ? FontWeight.bold
+                        : FontWeight.w500,
+                    color: isSelected
+                        ? Colors.white
+                        : isToday
+                        ? themeProvider.accentColor
+                        : isWeekend
+                        ? themeProvider.subtitleColor.withValues(alpha: 0.7)
+                        : themeProvider.textColor,
                   ),
                 ),
-                if (dayEvents.isNotEmpty)
-                  Positioned(
-                    bottom: 1,
-                    left: 0,
-                    right: 0,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: dayEvents
-                          .take(3)
-                          .map(
-                            (event) => Container(
-                              width: 4,
-                              height: 4,
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 0.5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSelected ? Colors.white : event.color,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
+                if (dayEvents.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: dayEvents.take(2).map((event) {
+                      return Container(
+                        width: 4,
+                        height: 4,
+                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.white.withValues(alpha: 0.9)
+                              : event.color,
+                          shape: BoxShape.circle,
+                        ),
+                      );
+                    }).toList(),
                   ),
+                ],
               ],
             ),
           ),

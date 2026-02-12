@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/app_settings_model.dart';
+import '../../../models/note_model.dart';
+import '../../../models/event_model.dart';
+import '../../../models/todo_model.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../services/google_drive_service.dart';
+import '../../../services/hive_database.dart';
+import '../../../services/note_storage.dart';
+import '../../../services/event_storage.dart';
+import '../../../services/todo_storage.dart';
 import 'google_drive_backup_page.dart';
 import 'google_login_page.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 
 class DataManagementPage extends StatefulWidget {
   final AppSettings settings;
@@ -25,23 +35,46 @@ class _DataManagementPageState extends State<DataManagementPage> {
   bool _isImporting = false;
   bool _isBackingUp = false;
   DateTime? _lastBackupTime;
+  int _notesCount = 0;
+  int _eventsCount = 0;
+  int _todosCount = 0;
+  GoogleDriveService? _driveService;
 
-  GoogleDriveService get _driveService =>
-      Provider.of<GoogleDriveService>(context, listen: false);
+  @override
+  void initState() {
+    super.initState();
+    _loadStorageStats();
+    _driveService = Provider.of<GoogleDriveService>(context, listen: false);
+    _driveService?.addListener(_updateAuthStatus);
+  }
+
+  Future<void> _loadStorageStats() async {
+    final notes = await HiveDatabase.instance.getNotesCount();
+    final events = await HiveDatabase.instance.getEventsCount();
+    final todos = await HiveDatabase.instance.getTodosCount();
+    if (mounted) {
+      setState(() {
+        _notesCount = notes;
+        _eventsCount = events;
+        _todosCount = todos;
+      });
+    }
+  }
 
   void _updateAuthStatus() {
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _driveService.addListener(_updateAuthStatus);
   }
 
   @override
   void dispose() {
-    _driveService.removeListener(_updateAuthStatus);
+    _driveService?.removeListener(_updateAuthStatus);
     super.dispose();
   }
 
@@ -72,17 +105,28 @@ class _DataManagementPageState extends State<DataManagementPage> {
   }
 
   Future<void> _handleGoogleLogout() async {
-    await _driveService.signOut();
+    await _driveService!.signOut();
     setState(() {});
   }
 
   Future<void> _backupToGoogleDrive() async {
     setState(() => _isBackingUp = true);
     try {
-      await _driveService.backupData(
+      final notes = await NoteStorage.instance.readAllNotes();
+      final events = await EventStorage.instance.readAllEvents();
+      final todos = await TodoStorage.instance.readAllTodos();
+
+      final backupData = {
+        'notes': notes.map((note) => note.toJson()).toList(),
+        'events': events.map((event) => event.toJson()).toList(),
+        'todos': todos.map((todo) => todo.toJson()).toList(),
+        'backupDate': DateTime.now().toIso8601String(),
+      };
+
+      await _driveService!.backupData(
         fileName:
             'smart_note_backup_${DateTime.now().millisecondsSinceEpoch}.json',
-        content: '{"notes": [], "events": []}',
+        content: jsonEncode(backupData),
       );
 
       setState(() => _lastBackupTime = DateTime.now());
@@ -94,7 +138,11 @@ class _DataManagementPageState extends State<DataManagementPage> {
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 12),
-                const Expanded(child: Text('Backup completed successfully!')),
+                Expanded(
+                  child: Text(
+                    'Backup completed successfully! (${notes.length} notes, ${events.length} events, ${todos.length} todos)',
+                  ),
+                ),
               ],
             ),
             backgroundColor: Colors.green,
@@ -143,49 +191,162 @@ class _DataManagementPageState extends State<DataManagementPage> {
 
   Future<void> _exportData() async {
     setState(() => _isExporting = true);
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      setState(() => _isExporting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.download, color: Colors.white),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Data exported successfully!')),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+    try {
+      final notes = await NoteStorage.instance.readAllNotes();
+      final events = await EventStorage.instance.readAllEvents();
+      final todos = await TodoStorage.instance.readAllTodos();
+
+      final exportData = {
+        'version': '1.0',
+        'exportDate': DateTime.now().toIso8601String(),
+        'notes': notes.map((note) => note.toJson()).toList(),
+        'events': events.map((event) => event.toJson()).toList(),
+        'todos': todos.map((todo) => todo.toJson()).toList(),
+      };
+
+      final jsonString = jsonEncode(exportData);
+
+      String? outputFile = await FilePicker.platform.saveFile(
+        dialogTitle: 'Export Data',
+        fileName:
+            'smart_note_backup_${DateTime.now().millisecondsSinceEpoch}.json',
+        allowedExtensions: ['json'],
+        type: FileType.custom,
       );
+
+      if (outputFile != null) {
+        final file = File(outputFile);
+        await file.writeAsString(jsonString);
+
+        if (mounted) {
+          setState(() => _isExporting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Data exported successfully! (${notes.length} notes, ${events.length} events, ${todos.length} todos)',
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          setState(() => _isExporting = false);
+        }
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _isExporting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Export failed: $error')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
     }
   }
 
   Future<void> _importData() async {
     setState(() => _isImporting = true);
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      setState(() => _isImporting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.upload, color: Colors.white),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Data imported successfully!')),
-            ],
-          ),
-          backgroundColor: Colors.blue,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        dialogTitle: 'Import Data',
+        allowedExtensions: ['json'],
+        type: FileType.custom,
       );
+
+      if (result != null) {
+        final file = File(result.files.single.path!);
+        final jsonString = await file.readAsString();
+        final data = jsonDecode(jsonString) as Map<String, dynamic>;
+
+        final notesData = data['notes'] as List? ?? [];
+        final eventsData = data['events'] as List? ?? [];
+        final todosData = data['todos'] as List? ?? [];
+
+        for (final noteJson in notesData) {
+          await NoteStorage.instance.create(Note.fromJson(noteJson));
+        }
+        for (final eventJson in eventsData) {
+          await EventStorage.instance.create(Event.fromJson(eventJson));
+        }
+        for (final todoJson in todosData) {
+          await TodoStorage.instance.create(Todo.fromJson(todoJson));
+        }
+
+        await _loadStorageStats();
+
+        if (mounted) {
+          setState(() => _isImporting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Data imported successfully! (${notesData.length} notes, ${eventsData.length} events, ${todosData.length} todos)',
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.blue,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          setState(() => _isImporting = false);
+        }
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _isImporting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Import failed: $error')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -201,7 +362,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
           ],
         ),
         content: const Text(
-          'This will delete all notes, events, and settings. This action cannot be undone and is permanent.',
+          'This will delete all notes, events, and todos. This action cannot be undone and is permanent.',
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
@@ -219,23 +380,47 @@ class _DataManagementPageState extends State<DataManagementPage> {
     );
 
     if (confirmed == true) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.delete_forever, color: Colors.white),
-                const SizedBox(width: 12),
-                const Expanded(child: Text('All data cleared!')),
-              ],
+      try {
+        await HiveDatabase.instance.clearAllData();
+        await _loadStorageStats();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.delete_forever, color: Colors.white),
+                  const SizedBox(width: 12),
+                  const Expanded(child: Text('All data cleared successfully!')),
+                ],
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+          );
+        }
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('Failed to clear data: $error')),
+                ],
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
     }
   }
@@ -294,8 +479,8 @@ class _DataManagementPageState extends State<DataManagementPage> {
   }
 
   Widget _buildGoogleDriveCard(ThemeProvider themeProvider) {
-    final isAuthenticated = _driveService.isAuthenticated;
-    final userEmail = _driveService.currentUser?.email;
+    final isAuthenticated = _driveService?.isAuthenticated ?? false;
+    final userEmail = _driveService?.currentUser?.email;
 
     return Container(
       decoration: BoxDecoration(
@@ -602,6 +787,11 @@ class _DataManagementPageState extends State<DataManagementPage> {
                     color: themeProvider.textColor,
                   ),
                 ),
+                const Spacer(),
+                TextButton(
+                  onPressed: _loadStorageStats,
+                  child: const Text('Refresh'),
+                ),
               ],
             ),
           ),
@@ -611,7 +801,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
               children: [
                 _buildStorageRow(
                   label: 'Notes',
-                  value: '24',
+                  value: _notesCount.toString(),
                   icon: Icons.note,
                   color: Colors.blue,
                   themeProvider: themeProvider,
@@ -619,7 +809,7 @@ class _DataManagementPageState extends State<DataManagementPage> {
                 const SizedBox(height: 12),
                 _buildStorageRow(
                   label: 'Events',
-                  value: '12',
+                  value: _eventsCount.toString(),
                   icon: Icons.event,
                   color: Colors.green,
                   themeProvider: themeProvider,
@@ -627,15 +817,15 @@ class _DataManagementPageState extends State<DataManagementPage> {
                 const SizedBox(height: 12),
                 _buildStorageRow(
                   label: 'To-Dos',
-                  value: '8',
+                  value: _todosCount.toString(),
                   icon: Icons.check_circle,
                   color: Colors.orange,
                   themeProvider: themeProvider,
                 ),
                 const SizedBox(height: 12),
                 _buildStorageRow(
-                  label: 'Total Size',
-                  value: '2.4 MB',
+                  label: 'Total Items',
+                  value: (_notesCount + _eventsCount + _todosCount).toString(),
                   icon: Icons.cloud,
                   color: themeProvider.accentColor,
                   themeProvider: themeProvider,

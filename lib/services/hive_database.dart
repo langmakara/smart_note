@@ -134,4 +134,23 @@ class HiveDatabase {
       themeMode: settingsBox.get('themeMode', defaultValue: 'system') as String,
     );
   }
+
+  Future<void> clearAllData() async {
+    await notesBox.clear();
+    await eventsBox.clear();
+    await todosBox.clear();
+  }
+
+  Future<int> getNotesCount() async => notesBox.length;
+
+  Future<int> getEventsCount() async => eventsBox.length;
+
+  Future<int> getTodosCount() async => todosBox.length;
+
+  Future<int> getTotalItemsCount() async {
+    final notesSize = notesBox.length;
+    final eventsSize = eventsBox.length;
+    final todosSize = todosBox.length;
+    return notesSize + eventsSize + todosSize;
+  }
 }

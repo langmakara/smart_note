@@ -17,6 +17,13 @@ class _MainWrapperState extends State<MainWrapper> {
   int _currentIndex = 0;
   late List<Widget> _pages;
 
+  final List<NavItem> _navItems = [
+    NavItem(icon: Icons.home_outlined, label: 'Home'),
+    NavItem(icon: Icons.calendar_today_outlined, label: 'Calendar'),
+    NavItem(icon: Icons.notifications_outlined, label: 'Alerts'),
+    NavItem(icon: Icons.settings_outlined, label: 'Settings'),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -36,109 +43,81 @@ class _MainWrapperState extends State<MainWrapper> {
       backgroundColor: themeProvider.backgroundColor,
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: themeProvider.bottomNavBgColor,
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: themeProvider.shadowColor,
-              blurRadius: 20,
-              offset: const Offset(0, -5),
+              color: themeProvider.shadowColor.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildNavItem(
-              icon: Icons.home,
-              label: 'Home',
-              index: 0,
-              themeProvider: themeProvider,
-            ),
-            _buildNavItem(
-              icon: Icons.calendar_month,
-              label: 'Calendar',
-              index: 1,
-              themeProvider: themeProvider,
-            ),
-            _buildNavItem(
-              icon: Icons.notifications,
-              label: 'Alerts',
-              index: 2,
-              themeProvider: themeProvider,
-            ),
-            _buildNavItem(
-              icon: Icons.settings,
-              label: 'Settings',
-              index: 3,
-              themeProvider: themeProvider,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: _navItems.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                final isSelected = _currentIndex == index;
 
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required int index,
-    required ThemeProvider themeProvider,
-  }) {
-    final isSelected = _currentIndex == index;
-    final color = isSelected
-        ? themeProvider.accentColor
-        : themeProvider.subtitleColor;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          setState(() => _currentIndex = index);
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: isSelected
-              ? BoxDecoration(
-                  color: themeProvider.accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                )
-              : null,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? themeProvider.accentColor
-                      : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 24,
-                  color: isSelected ? Colors.white : color,
-                ),
-              ),
-              const SizedBox(height: 4),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: TextStyle(
-                  fontSize: isSelected ? 12 : 11,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: color,
-                ),
-                child: Text(label),
-              ),
-            ],
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _currentIndex = index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? themeProvider.accentColor.withValues(alpha: 0.15)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isSelected ? item.icon : item.icon,
+                            size: 24,
+                            color: isSelected
+                                ? themeProvider.accentColor
+                                : themeProvider.subtitleColor,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            item.label,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? themeProvider.accentColor
+                                  : themeProvider.subtitleColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+class NavItem {
+  final IconData icon;
+  final String label;
+
+  NavItem({required this.icon, required this.label});
 }

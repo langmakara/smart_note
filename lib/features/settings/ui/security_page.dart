@@ -237,45 +237,47 @@ class _SecurityPageState extends State<SecurityPage> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const Spacer(),
-              Icon(
-                Icons.lock_outline,
-                size: 80,
-                color: themeProvider.accentColor.withValues(alpha: 0.8),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _getTitle(),
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: themeProvider.textColor,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+                Icon(
+                  Icons.lock_outline,
+                  size: 80,
+                  color: themeProvider.accentColor.withValues(alpha: 0.8),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _getSubtitle(),
-                style: TextStyle(
-                  fontSize: 16,
-                  color: themeProvider.subtitleColor,
-                ),
-              ),
-              const SizedBox(height: 32),
-              _buildPinDots(themeProvider),
-              if (_errorMessage.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Text(
-                    _errorMessage,
-                    style: TextStyle(color: Colors.red, fontSize: 14),
+                const SizedBox(height: 16),
+                Text(
+                  _getTitle(),
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: themeProvider.textColor,
                   ),
                 ),
-              const Spacer(),
-              _buildNumpad(themeProvider),
-              const SizedBox(height: 24),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  _getSubtitle(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: themeProvider.subtitleColor,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                _buildPinDots(themeProvider),
+                if (_errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Text(
+                      _errorMessage,
+                      style: TextStyle(color: Colors.red, fontSize: 14),
+                    ),
+                  ),
+                const SizedBox(height: 24),
+                _buildNumpad(themeProvider),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),

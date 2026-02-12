@@ -25,6 +25,7 @@ class _CalendarPageState extends State<CalendarPage> {
   void initState() {
     super.initState();
     _loadEvents();
+    _selectedDate = DateTime.now();
   }
 
   Future<void> _loadEvents() async {
@@ -82,9 +83,7 @@ class _CalendarPageState extends State<CalendarPage> {
     showModalBottomSheet<Event>(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) => ModernEventBottomSheet(
         selectedDate: _selectedDate,
         onEventCreated: (event) async {
@@ -136,87 +135,21 @@ class _CalendarPageState extends State<CalendarPage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
+    final selectedDayEvents = _events
+        .where(
+          (event) => _selectedDate != null && event.isOnDate(_selectedDate!),
+        )
+        .toList();
+
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
-      appBar: AppBar(
-        backgroundColor: themeProvider.appBarColor,
-        elevation: 1,
-        title: Text(
-          '${_monthNames[_focusedMonth.month - 1]} ${_focusedMonth.year}',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: themeProvider.accentColor,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: _goToToday,
-            child: Text(
-              'Today',
-              style: TextStyle(
-                color: themeProvider.accentColor,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.chevron_left, color: themeProvider.subtitleColor),
-            onPressed: () => _addMonths(-1),
-          ),
-          IconButton(
-            icon: Icon(Icons.chevron_right, color: themeProvider.subtitleColor),
-            onPressed: () => _addMonths(1),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Weekday Headers
-          Padding(
-            padding: const EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 20.0,
-              bottom: 0,
-            ),
-            child: Row(
-              children: _weekdayNames
-                  .map(
-                    (day) => Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: themeProvider.searchFillColor,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: themeProvider.dividerColor,
-                            width: 0.5,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            day,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                              color: themeProvider.subtitleColor,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Calendar Grid
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(themeProvider),
+            _buildWeekdayHeader(themeProvider),
+            Expanded(
               child: CalendarGrid(
                 focusedMonth: _focusedMonth,
                 monthNames: _monthNames,
@@ -227,81 +160,263 @@ class _CalendarPageState extends State<CalendarPage> {
                 events: _events,
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          // Quick Actions
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: themeProvider.accentColor,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: _buildQuickAction(
-                      icon: Icons.add_circle_outline,
-                      label: 'Add Event',
-                      onTap: () => _addEvent(context),
-                      themeProvider: themeProvider,
-                    ),
-                  ),
+            _buildSelectedDateInfo(themeProvider, selectedDayEvents),
+            _buildBottomBar(themeProvider),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(ThemeProvider themeProvider) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Calendar',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: themeProvider.textColor,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: themeProvider.accentColor,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: _buildQuickAction(
-                      icon: Icons.today,
-                      label: 'View Events',
-                      onTap: () => _viewEvents(context),
-                      themeProvider: themeProvider,
-                    ),
-                  ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${_monthNames[_focusedMonth.month - 1]} ${_focusedMonth.year}',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: themeProvider.subtitleColor,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          Row(
+            children: [
+              _navButton(
+                icon: Icons.chevron_left,
+                onPressed: () => _addMonths(-1),
+                themeProvider: themeProvider,
+              ),
+              const SizedBox(width: 8),
+              _navButton(
+                icon: Icons.chevron_right,
+                onPressed: () => _addMonths(1),
+                themeProvider: themeProvider,
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildQuickAction({
+  Widget _navButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required ThemeProvider themeProvider,
+  }) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: themeProvider.searchFillColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: themeProvider.textColor),
+      ),
+    );
+  }
+
+  Widget _buildWeekdayHeader(ThemeProvider themeProvider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        children: _weekdayNames.asMap().entries.map((entry) {
+          final isWeekend = entry.key >= 5;
+          return Expanded(
+            child: Center(
+              child: Text(
+                entry.value,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isWeekend
+                      ? themeProvider.subtitleColor.withValues(alpha: 0.6)
+                      : themeProvider.subtitleColor,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildSelectedDateInfo(
+    ThemeProvider themeProvider,
+    List<Event> events,
+  ) {
+    if (_selectedDate == null) return const SizedBox.shrink();
+
+    final dayOfWeek = DateTime(
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
+    ).weekday;
+    final weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final formattedDate =
+        '${weekdayNames[dayOfWeek - 1]}, ${_monthNames[_selectedDate!.month - 1]} ${_selectedDate!.day}';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: themeProvider.searchFillColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: themeProvider.accentColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '${events.length}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  formattedDate,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: themeProvider.textColor,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  events.isEmpty
+                      ? 'No events'
+                      : '${events.length} event${events.length > 1 ? 's' : ''}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: themeProvider.subtitleColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (events.isNotEmpty)
+            TextButton(
+              onPressed: () => _viewEvents(context),
+              child: Text(
+                'View All',
+                style: TextStyle(
+                  color: themeProvider.accentColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(ThemeProvider themeProvider) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: themeProvider.backgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildActionButton(
+                icon: Icons.today,
+                label: 'Today',
+                onTap: _goToToday,
+                themeProvider: themeProvider,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionButton(
+                icon: Icons.add,
+                label: 'Add Event',
+                onTap: () => _addEvent(context),
+                isPrimary: true,
+                themeProvider: themeProvider,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
     required ThemeProvider themeProvider,
+    bool isPrimary = false,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 20, color: Colors.white),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                  color: Colors.white,
-                ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: isPrimary
+              ? themeProvider.accentColor
+              : themeProvider.searchFillColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isPrimary ? Colors.white : themeProvider.textColor,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: isPrimary ? Colors.white : themeProvider.textColor,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
