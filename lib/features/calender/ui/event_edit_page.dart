@@ -460,7 +460,7 @@ class _EventEditPageState extends State<EventEditPage> {
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),

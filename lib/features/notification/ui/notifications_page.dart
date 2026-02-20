@@ -13,17 +13,7 @@ class NotificationsPage extends StatefulWidget {
 }
 
 class _NotificationsPageState extends State<NotificationsPage> {
-  List<Map<String, dynamic>> _systemNotifications = [
-    {
-      "id": "sys_1",
-      "title": "Welcome to Smart Notes!",
-      "description":
-          "Start organizing your notes, events, and todos in one place.",
-      "time": DateTime.now().subtract(const Duration(hours: 1)),
-      "type": "system",
-      "isRead": false,
-    },
-  ];
+  final List<Map<String, dynamic>> _systemNotifications = const [];
 
   List<Event> _events = [];
   bool _isLoading = true;
@@ -54,8 +44,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
     switch (type) {
       case 'event':
         return Icons.event;
-      case 'backup':
-        return Icons.backup;
       case 'system':
         return Icons.info;
       default:
@@ -67,8 +55,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
     switch (type) {
       case 'event':
         return Colors.orange;
-      case 'backup':
-        return Colors.blue;
       case 'system':
         return Colors.purple;
       default:
@@ -648,25 +634,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              "Add events with reminders to see them here",
+              "No upcoming event reminders",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
                 color: themeProvider.subtitleColor,
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pushNamed(context, '/calendar'),
-            icon: const Icon(Icons.add),
-            label: const Text("Create Event"),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              backgroundColor: themeProvider.accentColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),

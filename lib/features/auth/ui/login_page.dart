@@ -70,7 +70,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return true;
   }
 
-  Future<void> _handleGoogleSignIn() async {
+  Future<void> _handleContinue() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -82,8 +82,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         return;
       }
 
+      if (!mounted) return;
       final authService = Provider.of<AuthService>(context, listen: false);
-      await authService.signInWithGoogle();
+      await authService.signIn();
 
       if (mounted) {
         await HapticFeedback.lightImpact();
@@ -91,7 +92,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       }
     } catch (error) {
       setState(() {
-        _errorMessage = 'Failed to sign in with Google. Please try again.';
+        _errorMessage = 'Failed to continue. Please try again.';
       });
     } finally {
       if (mounted) {
@@ -101,13 +102,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   Future<void> _handleSkip() async {
-    if (!await _checkSecurity()) {
-      return;
-    }
-    widget.onSkip();
-  }
-
-  Future<void> _handleEmailSignIn() async {
     if (!await _checkSecurity()) {
       return;
     }
@@ -243,15 +237,21 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Widget _buildFeatureCards(Color accentColor) {
     final features = [
       {
-        'icon': Icons.cloud_upload_outlined,
-        'title': 'Cloud Backup',
-        'subtitle': 'Never lose your notes',
+        'icon': Icons.note_alt_outlined,
+        'title': 'Notes',
+        'subtitle': 'Capture your thoughts',
+        'color': Colors.purple,
+      },
+      {
+        'icon': Icons.check_circle_outline,
+        'title': 'To-Dos',
+        'subtitle': 'Track your tasks',
         'color': Colors.blue,
       },
       {
-        'icon': Icons.notifications_none_outlined,
-        'title': 'Smart Reminders',
-        'subtitle': 'Never miss a deadline',
+        'icon': Icons.calendar_today,
+        'title': 'Calendar',
+        'subtitle': 'Schedule events',
         'color': Colors.orange,
       },
       {
@@ -429,22 +429,20 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       },
       child: Column(
         children: [
-          _buildGoogleButton(accentColor),
+          _buildContinueButton(accentColor),
           const SizedBox(height: 12),
-          _buildEmailButton(accentColor),
-          const SizedBox(height: 16),
           _buildSkipButton(accentColor),
         ],
       ),
     );
   }
 
-  Widget _buildGoogleButton(Color accentColor) {
+  Widget _buildContinueButton(Color accentColor) {
     return SizedBox(
       width: double.infinity,
       height: 54,
       child: ElevatedButton.icon(
-        onPressed: _isLoading ? null : _handleGoogleSignIn,
+        onPressed: _isLoading ? null : _handleContinue,
         icon: _isLoading
             ? SizedBox(
                 width: 20,
@@ -454,35 +452,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : const Icon(Icons.g_mobiledata, size: 28, color: Colors.blue),
+            : const Icon(Icons.arrow_forward, size: 22),
         label: Text(
-          _isLoading ? 'Signing in...' : 'Continue with Google',
+          _isLoading ? 'Loading...' : 'Get Started',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.grey[800],
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          side: BorderSide(color: Colors.grey[200]!),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmailButton(Color accentColor) {
-    return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: ElevatedButton.icon(
-        onPressed: _isLoading ? null : _handleEmailSignIn,
-        icon: const Icon(Icons.email_outlined, size: 22),
-        label: const Text(
-          'Continue with Email',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: accentColor,

@@ -466,13 +466,13 @@ class _EventsListPageState extends State<EventsListPage> {
           ),
           TextButton(
             onPressed: () async {
+              final navigator = Navigator.of(context);
               await EventStorage.instance.delete(event.id);
               await NotificationService.instance.cancelEventReminder(event.id);
               widget.onDeleteEvent(event.id);
-              if (mounted) {
-                Navigator.pop(context);
-                ToastService.showError(message: 'Event deleted');
-              }
+              if (!mounted) return;
+              navigator.pop();
+              ToastService.showError(message: 'Event deleted');
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),

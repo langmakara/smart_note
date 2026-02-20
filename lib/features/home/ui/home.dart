@@ -253,13 +253,13 @@ class _HomePageState extends State<HomePage> {
           ),
           TextButton(
             onPressed: () async {
-              final dialogContext = context;
+              final navigator = Navigator.of(context);
               await NoteStorage.instance.delete(noteId);
               setState(() {
                 _notes.removeWhere((note) => note.id == noteId);
               });
               if (!mounted) return;
-              Navigator.pop(dialogContext);
+              navigator.pop();
               ToastService.showError(message: 'Note deleted');
             },
             child: const Text("Delete", style: TextStyle(color: Colors.red)),
@@ -452,7 +452,7 @@ class _HomePageState extends State<HomePage> {
                   Text(
                     _searchQuery.isNotEmpty
                         ? 'No results found'
-                        : 'Nothing yet',
+                        : _getEmptyTitle(),
                     style: TextStyle(
                       fontSize: 18,
                       color: themeProvider.subtitleColor,
@@ -463,7 +463,7 @@ class _HomePageState extends State<HomePage> {
                   Text(
                     _searchQuery.isNotEmpty
                         ? 'Try a different search term'
-                        : 'Tap + to create your first item',
+                        : _getEmptySubtitle(),
                     style: TextStyle(
                       color: themeProvider.subtitleColor.withValues(alpha: 0.7),
                     ),
@@ -477,47 +477,81 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  Text(
-                    _searchQuery.isNotEmpty
-                        ? 'Results ($_totalCount)'
-                        : 'Recent ($_totalCount)',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: themeProvider.textColor,
+                  if (_searchQuery.isNotEmpty) ...[
+                    Text(
+                      'Results ($_totalCount)',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: themeProvider.textColor,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
+                  ] else ...[
+                    Text(
+                      'Recent ($_totalCount)',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: themeProvider.textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: _filteredItems.length,
-                      itemBuilder: (context, index) {
-                        final item = _filteredItems[index];
-                        if (item is Note) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: NoteCard(
-                              note: item,
-                              onView: () => _viewNote(item),
-                              onEdit: () => _editNote(item),
-                              onDelete: () => _deleteNote(item.id),
+                    child: _filteredItems.isEmpty && _searchQuery.isNotEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.search_off,
+                                  size: 60,
+                                  color: themeProvider.subtitleColor.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No results found',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: themeProvider.subtitleColor,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        } else if (item is Todo) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: TodoCard(
-                              todo: item,
-                              onView: () => _viewTodo(item),
-                              onEdit: () => _editTodo(item),
-                              onDelete: () => _deleteTodo(item.id),
-                              onToggleDone: () => _toggleTodoDone(item),
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
+                          )
+                        : ListView.builder(
+                            itemCount: _filteredItems.length,
+                            itemBuilder: (context, index) {
+                              final item = _filteredItems[index];
+                              if (item is Note) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: NoteCard(
+                                    note: item,
+                                    onView: () => _viewNote(item),
+                                    onEdit: () => _editNote(item),
+                                    onDelete: () => _deleteNote(item.id),
+                                  ),
+                                );
+                              } else if (item is Todo) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: TodoCard(
+                                    todo: item,
+                                    onView: () => _viewTodo(item),
+                                    onEdit: () => _editTodo(item),
+                                    onDelete: () => _deleteTodo(item.id),
+                                    onToggleDone: () => _toggleTodoDone(item),
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
                   ),
                 ],
               ),
@@ -568,5 +602,17 @@ class _HomePageState extends State<HomePage> {
     if (_selectedType == 'todos') return Icons.check_circle_outline;
     if (_selectedType == 'notes') return Icons.note_alt_outlined;
     return Icons.lightbulb_outline;
+  }
+
+  String _getEmptyTitle() {
+    if (_selectedType == 'todos') return 'No to-dos yet';
+    if (_selectedType == 'notes') return 'No notes yet';
+    return 'Nothing yet';
+  }
+
+  String _getEmptySubtitle() {
+    if (_selectedType == 'todos') return 'Tap + to create your first to-do';
+    if (_selectedType == 'notes') return 'Tap + to create your first note';
+    return 'Tap + to create your first item';
   }
 }

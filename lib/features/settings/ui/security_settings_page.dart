@@ -111,13 +111,15 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                 ),
                 enabled: securityService.isPasswordEnabled(),
                 onTap: () async {
+                  final ctx = context;
                   final confirm = await _showConfirmDialog(
-                    context,
+                    ctx,
                     "Remove Password",
                     "Are you sure you want to remove the numeric password?",
                   );
-                  if (confirm) {
-                    await _disablePassword(context);
+                  if (confirm && mounted) {
+                    final disableCtx = ctx;
+                    await _disablePassword(disableCtx);
                   }
                 },
               ),
@@ -152,6 +154,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
     final securityService = SecurityService.instance;
 
     if (securityService.isPasswordEnabled()) {
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
       final currentPassword = await _showPasswordDialog(
         context,
         "Enter Current Password",
@@ -161,32 +164,30 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
       if (currentPassword != null) {
         if (securityService.verifyPassword(currentPassword)) {
           await securityService.disablePassword();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Password removed successfully'),
-                backgroundColor: themeProvider.accentColor,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+          if (!mounted) return;
+          scaffoldMessenger.showSnackBar(
+            SnackBar(
+              content: const Text('Password removed successfully'),
+              backgroundColor: themeProvider.accentColor,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-            );
-            setState(() {});
-          }
+            ),
+          );
+          setState(() {});
         } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Incorrect password'),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+          if (!mounted) return;
+          scaffoldMessenger.showSnackBar(
+            SnackBar(
+              content: const Text('Incorrect password'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-            );
-          }
+            ),
+          );
         }
       }
     }

@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../widget/theme_switch_tile.dart';
-import 'appearance_settings_page.dart';
 import 'color_settings_page.dart';
 import 'language_settings_page.dart';
-import 'notification_settings_page.dart';
-import 'data_management_page.dart';
 import 'security_settings_page.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -91,31 +88,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
                 },
               ),
-              Divider(color: themeProvider.dividerColor),
-              ListTile(
-                leading: Icon(Icons.palette, color: themeProvider.accentColor),
-                title: Text(
-                  "Appearance Settings",
-                  style: TextStyle(color: themeProvider.textColor),
-                ),
-                trailing: Icon(
-                  Icons.chevron_right,
-                  color: themeProvider.subtitleColor,
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AppearanceSettingsPage(
-                        settings: settings,
-                        onSettingsChanged: (newSettings) {
-                          themeProvider.updateSettings(newSettings);
-                        },
-                      ),
-                    ),
-                  );
-                },
-              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -162,34 +134,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
                 },
               ),
-              Divider(color: themeProvider.dividerColor),
-              ListTile(
-                leading: Icon(
-                  Icons.notifications,
-                  color: themeProvider.accentColor,
-                ),
-                title: Text(
-                  "Notifications",
-                  style: TextStyle(color: themeProvider.textColor),
-                ),
-                trailing: Icon(
-                  Icons.chevron_right,
-                  color: themeProvider.subtitleColor,
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NotificationSettingsPage(
-                        settings: settings,
-                        onSettingsChanged: (newSettings) {
-                          themeProvider.updateSettings(newSettings);
-                        },
-                      ),
-                    ),
-                  );
-                },
-              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -213,127 +157,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const SecuritySettingsPage(),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // About Section
-          _buildSection(
-            title: "About",
-            themeProvider: themeProvider,
-            children: [
-              ListTile(
-                leading: Icon(
-                  Icons.info_outline,
-                  color: themeProvider.accentColor,
-                ),
-                title: Text(
-                  "About Smart Note",
-                  style: TextStyle(color: themeProvider.textColor),
-                ),
-                trailing: Icon(
-                  Icons.chevron_right,
-                  color: themeProvider.subtitleColor,
-                ),
-                onTap: () {
-                  showAboutDialog(
-                    context: context,
-                    applicationName: "Smart Notes",
-                    applicationVersion: "1.0.0",
-                    applicationIcon: Icon(
-                      Icons.note_alt,
-                      size: 48,
-                      color: themeProvider.accentColor,
-                    ),
-                    children: [
-                      Text(
-                        "A beautiful and simple note-taking app built with Flutter.",
-                        style: TextStyle(color: themeProvider.textColor),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "© 2025 Smart Notes. All rights reserved.",
-                        style: TextStyle(color: themeProvider.subtitleColor),
-                      ),
-                    ],
-                  );
-                },
-              ),
-              Divider(color: themeProvider.dividerColor),
-              ListTile(
-                leading: Icon(Icons.storage, color: themeProvider.accentColor),
-                title: Text(
-                  "Data Management",
-                  style: TextStyle(color: themeProvider.textColor),
-                ),
-                trailing: Icon(
-                  Icons.chevron_right,
-                  color: themeProvider.subtitleColor,
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DataManagementPage(
-                        settings: settings,
-                        onSettingsChanged: (newSettings) {
-                          themeProvider.updateSettings(newSettings);
-                        },
-                      ),
-                    ),
-                  );
-                },
-              ),
-              Divider(color: themeProvider.dividerColor),
-              ListTile(
-                leading: Icon(
-                  Icons.star_border,
-                  color: themeProvider.accentColor,
-                ),
-                title: Text(
-                  "Rate the App",
-                  style: TextStyle(color: themeProvider.textColor),
-                ),
-                trailing: Icon(
-                  Icons.chevron_right,
-                  color: themeProvider.subtitleColor,
-                ),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Thanks for your support! ⭐'),
-                      backgroundColor: Colors.amber,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              Divider(color: themeProvider.dividerColor),
-              ListTile(
-                leading: Icon(Icons.feedback, color: themeProvider.accentColor),
-                title: Text(
-                  "Send Feedback",
-                  style: TextStyle(color: themeProvider.textColor),
-                ),
-                trailing: Icon(
-                  Icons.chevron_right,
-                  color: themeProvider.subtitleColor,
-                ),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Feedback form coming soon!'),
-                      backgroundColor: Colors.green,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                     ),
                   );
                 },

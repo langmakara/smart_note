@@ -4,10 +4,8 @@ import 'package:provider/provider.dart';
 import 'config/main_wrapper.dart';
 import 'features/settings/ui/security_page.dart';
 import 'providers/theme_provider.dart';
-import 'providers/backup_provider.dart';
 import 'services/app_initialization.dart';
 import 'services/auth_service.dart';
-import 'services/google_drive_service.dart';
 import 'services/notification_service.dart';
 import 'services/security_service.dart';
 import 'services/toast_service.dart';
@@ -23,8 +21,6 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
         ChangeNotifierProvider(create: (context) => AuthService()),
-        ChangeNotifierProvider(create: (context) => GoogleDriveService()),
-        ChangeNotifierProvider(create: (context) => BackupProvider()),
       ],
       child: const MyApp(),
     ),
@@ -49,32 +45,16 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _initializeApp() async {
-    final appContext = context;
-
-    await AppInitialization.initialize(appContext);
+    await AppInitialization.initialize(context);
     if (!mounted) return;
 
-    final themeProvider = Provider.of<ThemeProvider>(appContext, listen: false);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     await themeProvider.init();
     if (!mounted) return;
 
-    final authService = Provider.of<AuthService>(appContext, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
     await authService.initialize();
-
-    final driveService = Provider.of<GoogleDriveService>(
-      appContext,
-      listen: false,
-    );
-    driveService.initialize(
-      webClientId: 'YOUR_ACTUAL_WEB_CLIENT_ID.apps.googleusercontent.com',
-      iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',
-    );
-
-    final backupProvider = Provider.of<BackupProvider>(
-      appContext,
-      listen: false,
-    );
-    await backupProvider.init();
+    if (!mounted) return;
 
     await NotificationService.instance.initialize();
 
