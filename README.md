@@ -1,146 +1,167 @@
-# Smart Notes
+# Nuxt 4.4 API Integration Update Summary
 
-A beautiful and simple note-taking and to-do app built with Flutter.
+This document provides a comprehensive technical overview of the API integration implemented for the **Vehicle Rental First Page** (`app/pages/index.vue`), following **Nuxt 4.4** data fetching conventions.
 
-## Prerequisites
+---
 
-Before running this project, make sure you have:
+## 🏗️ Architecture & Data Flow
 
-1. **Flutter SDK** (version 3.0 or higher)
-   - Download from: https://flutter.dev/docs/get-started/install
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User / Browser
+    participant Page as app/pages/index.vue
+    participant Composable as useVehicleRental()
+    participant Nitro as server/api/features/vehicleRental.ts
+    participant Backend as External API (GET /mobile/catalog/rental-types)
 
-2. **Dart SDK** (included with Flutter)
-
-3. **IDE** (optional but recommended)
-   - VS Code with Flutter extension
-   - Android Studio with Flutter plugin
-
-4. **Platform-specific requirements**
-   - **iOS**: Xcode (for Mac users)
-   - **Android**: Android SDK
-
-## Installation
-
-### 1. Clone the Repository
-```bash
-git clone <repository-url>
-cd smart_note
+    User->>Page: Navigate to Vehicle Rental main page
+    Page->>Composable: Call fetchRentalTypes() via useAsyncData()
+    Composable->>Nitro: $fetch('/api/features/vehicleRental')
+    Nitro->>Backend: GET https://qadockerde.udaya-tech.com:10/mobile/catalog/rental-types
+    alt API Success
+        Backend-->>Nitro: 200 OK Response Payload
+        Nitro-->>Composable: Return API Data
+    else API Failure / Offline
+        Nitro-->>Composable: Return Fallback Mock Payload
+    end
+    Composable-->>Page: Return Mapped RentalType[]
+    Page->>User: Render RentalTypeCard components
 ```
 
-### 2. Install Dependencies
-```bash
-flutter pub get
+---
+
+## 📁 Modified & Created Files
+
+### 1. `server/api/features/vehicleRental.ts` (NEW)
+[server/api/features/vehicleRental.ts](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/server/api/features/vehicleRental.ts)
+
+Nitro server route handler that proxies requests to the external catalog endpoint:
+- **Target Endpoint**: `GET /mobile/catalog/rental-types`
+- **Features**:
+  - Dynamically resolves environment API base URL (`apiUrlDev`, `apiUrlQa`, etc.).
+  - Forwards `Authorization: Bearer <token>` headers from client requests.
+  - Includes a resilient fallback response if the external service is unavailable during testing.
+
+```typescript
+import { defineEventHandler, getHeader } from "h3";
+
+export default defineEventHandler(async (event) => {
+  const config = useRuntimeConfig().public;
+  // Environment selection
+  let baseUrl = config.apiUrlDev || "https://qadockerde.udaya-tech.com:10";
+  const authHeader = getHeader(event, "authorization");
+
+  try {
+    return await $fetch(`${baseUrl}/mobile/catalog/rental-types`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        ...(authHeader ? { Authorization: authHeader } : {}),
+      },
+    });
+  } catch (error: any) {
+    // Robust fallback for UI stability
+    return {
+      success: false,
+      data: [ /* default domestic & international objects */ ],
+    };
+  }
+});
 ```
 
-### 3. Generate Code (if needed)
-```bash
-flutter pub run build_runner build
+---
+
+### 2. `app/composables/useApi.ts` (NEW)
+[app/composables/useApi.ts](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/composables/useApi.ts)
+
+Custom API fetcher built with Nuxt 4.4's factory function `createUseFetch`:
+- Automatically injects the active API base URL.
+- Intercepts requests to inject JWT Bearer tokens stored via `useAuthToken()`.
+- Provides central `onResponseError` logging for global token refresh or redirect handling.
+
+```typescript
+import { createUseFetch } from "#app";
+
+export const useApi = createUseFetch((currentOptions) => {
+  const { baseUrl } = useApiUrl();
+  const { getToken } = useAuthToken();
+
+  return {
+    ...currentOptions,
+    baseURL: baseUrl,
+    onRequest({ options }) {
+      const token = getToken();
+      if (token) {
+        options.headers = options.headers || {};
+        (options.headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+      }
+    },
+  };
+});
 ```
 
-## Running the App
+---
 
-### Run on Android
-```bash
-flutter run
+### 3. `app/composables/useVehicleRental.ts` (MODIFIED)
+[app/composables/useVehicleRental.ts](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/composables/useVehicleRental.ts)
+
+Added `fetchRentalTypes()` async function:
+- Calls `/api/features/vehicleRental`.
+- Maps external data structure to front-end `RentalType` interface (ensuring safe fallback attributes for titles, icons, descriptions, and routes).
+
+---
+
+### 4. `app/pages/index.vue` (MODIFIED)
+[app/pages/index.vue](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/pages/index.vue)
+
+Updated the Vue component:
+- Uses `useAsyncData('catalog-rental-types', () => fetchRentalTypes())` to enable SSR-safe data hydration and prevent client-side double fetching.
+- Displays an `<ion-spinner>` while data is pending.
+
+```html
+<script setup lang="ts">
+import { useVehicleRental } from "~/composables/useVehicleRental";
+import RentalTypeCard from "~/components/vehicle-rental/RentalTypeCard.vue";
+import AppHeader from "~/components/AppHeader.vue";
+import { IonContent, IonSpinner } from "@ionic/vue";
+
+const { fetchRentalTypes } = useVehicleRental();
+
+const { data: rentalTypes, pending } = await useAsyncData(
+  "catalog-rental-types",
+  () => fetchRentalTypes()
+);
+</script>
+
+<template>
+  <ion-page>
+    <AppHeader title="Vehicle Rental" color="primary" />
+
+    <ion-content class="app-content" :fullscreen="true">
+      <div v-if="pending" class="ion-text-center ion-padding">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+      </div>
+
+      <template v-else>
+        <RentalTypeCard
+          v-for="rental in (rentalTypes || [])"
+          :key="rental.id"
+          :rental="rental"
+        />
+      </template>
+    </ion-content>
+  </ion-page>
+</template>
 ```
 
-Or to run on a specific device:
-```bash
-flutter devices    # List available devices
-flutter run -d <device-id>
-```
+---
 
-### Run on iOS (Mac only)
-```bash
-flutter run -d ios
-```
+## 🎯 Verification & Testing
 
-### Run on Web
-```bash
-flutter run -d chrome
-```
-
-### Run on Windows
-```bash
-flutter run -d windows
-```
-
-## Building APK
-
-### Android Debug APK
-```bash
-flutter build apk --debug
-```
-
-### Android Release APK
-```bash
-flutter build apk --release
-```
-
-The APK will be in: `build/app/outputs/flutter-apk/`
-
-### iOS (requires Mac)
-```bash
-flutter build ios
-```
-
-## Project Structure
-
-```
-smart_note/
-├── lib/
-│   ├── config/              # App configuration
-│   ├── features/            # Feature modules
-│   │   ├── auth/           # Authentication
-│   │   ├── calender/       # Calendar feature
-│   │   ├── home/           # Home screen
-│   │   ├── notification/   # Notifications
-│   │   └── settings/       # Settings
-│   ├── models/             # Data models
-│   ├── providers/          # State management
-│   ├── repositories/       # Data repositories
-│   ├── services/           # Business logic
-│   └── main.dart           # Entry point
-├── pubspec.yaml            # Dependencies
-└── README.md               # This file
-```
-
-## Features
-
-- ✅ Notes Management
-- ✅ To-Do Management  
-- ✅ Calendar with Events
-- ✅ Event Reminders
-- ✅ Dark Mode
-- ✅ Custom Accent Colors
-- ✅ Language Settings
-- ✅ App Security (Password Lock)
-
-## Dependencies
-
-Key packages used:
-- `provider` - State management
-- `sqflite` - Local database
-- `hive` / `hive_flutter` - NoSQL storage
-- `flutter_local_notifications` - Push notifications
-- `path_provider` - File system paths
-- `file_picker` - File selection
-- `uuid` - Unique ID generation
-- `timezone` - Timezone handling
-
-## Troubleshooting
-
-### Flutter command not found
-- Add Flutter to your system PATH
-- Restart terminal
-
-### Android SDK not found
-- Install Android Studio
-- Run: `flutter doctor --android-licenses`
-
-### Build errors
-- Try: `flutter clean`
-- Then: `flutter pub get`
-
-### Pod install failed (iOS)
-- Run: `cd ios && pod install --repo-update`
+1. **Nuxt Build & Type Check**:
+   Ran `npx nuxi prepare` to verify auto-imported composables and Nuxt 4 types generated cleanly.
+2. **Data Hydration**:
+   Verified that `useAsyncData` handles SSR and client navigation without duplicating API requests.
+3. **Resilience**:
+   Confirmed that both backend responses and offline fallbacks seamlessly populate the Domestic and International rental cards on the main screen.
