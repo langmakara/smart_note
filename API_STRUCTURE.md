@@ -96,13 +96,18 @@ export interface FilterOptionsData {
 Configures the core factory client engine using Nuxt's native `useFetch`. It targets local Nitro proxy endpoints while safely attaching authorization headers.
 
 ```typescript
-import { useFetch, type UseFetchOptions } from '#app'
+import { useFetch } from '#app'
+
+export type ApiClientOptions<T> = Parameters<typeof useFetch<T>>[1]
 
 export const useApiClient = <T = any>(
   request: Parameters<typeof useFetch<T>>[0],
-  opts?: UseFetchOptions<T>
+  opts?: ApiClientOptions<T>
 ) => {
   const { getToken } = useAuthToken()
+
+  const userOnRequest = opts?.onRequest
+  const userOnResponseError = opts?.onResponseError
 
   return useFetch<T>(request, {
     ...opts,
@@ -110,16 +115,24 @@ export const useApiClient = <T = any>(
       const token = getToken()
       if (token) {
         const authValue = token.startsWith('Bearer ') ? token : `Bearer ${token}`
-        ctx.options.headers = ctx.options.headers || {}
-        (ctx.options.headers as Record<string, string>)['Authorization'] = authValue
+        const headers = new Headers(ctx.options.headers)
+        headers.set('Authorization', authValue)
+        ctx.options.headers = headers
+      }
+
+      if (typeof userOnRequest === 'function') {
+        userOnRequest(ctx)
       }
     },
     onResponseError(ctx) {
       if (ctx.response?.status === 401) {
-        console.warn('[useApiClient] Unauthorized (401). Token may be expired.')
+        console.warn('[useApiClient] Request unauthorized (401). Token may be expired.')
       }
-    }
-  } as UseFetchOptions<T>)
+      if (typeof userOnResponseError === 'function') {
+        userOnResponseError(ctx)
+      }
+    },
+  } as ApiClientOptions<T>)
 }
 ```
 
@@ -166,16 +179,32 @@ Server-only utility that safely resolves active environment API base URLs withou
 export function resolveApiBaseUrl(): string {
   const config = useRuntimeConfig()
   const pub = config.public
+
   const activeEnv = (String(pub.nodeEnv || 'dev')).toLowerCase().trim()
 
-  let baseUrl = String(pub.apiUrl || '')
-  if (!baseUrl) {
-    if (activeEnv === 'pro' || activeEnv === 'production') baseUrl = pub.apiUrlProd as string
-    else if (activeEnv === 'qa') baseUrl = pub.apiUrlQa as string
-    else if (activeEnv === 'local') baseUrl = pub.apiUrlLocal as string
-    else baseUrl = pub.apiUrlDev as string
+  const apiUrlDev = String(pub.apiUrlDev || '')
+  const apiUrlQa = String(pub.apiUrlQa || '')
+  const apiUrlLocal = String(pub.apiUrlLocal || '')
+  const apiUrlProd = String(pub.apiUrlProd || '')
+  const directApiUrl = String(pub.apiUrl || '')
+
+  let baseUrl = ''
+
+  if (directApiUrl && directApiUrl.trim() !== '') {
+    baseUrl = directApiUrl.trim()
+  } else if (activeEnv === 'pro' || activeEnv === 'production') {
+    baseUrl = apiUrlProd || apiUrlDev
+  } else if (activeEnv === 'qa') {
+    baseUrl = apiUrlQa || apiUrlDev
+  } else if (activeEnv === 'local') {
+    baseUrl = apiUrlLocal || apiUrlDev
+  } else {
+    baseUrl = apiUrlDev
   }
-  return baseUrl.replace(/\/+$/, '')
+
+  baseUrl = baseUrl.replace(/\/+$/, '')
+
+  return baseUrl
 }
 ```
 
