@@ -2,7 +2,7 @@
 
 This document defines the production-ready directory structure, architectural patterns, and implementation details for integrating external REST APIs within our Nuxt 4.4 application.
 
-This setup utilizes the **Repository Pattern** on the frontend alongside Nuxt 4.4's native `createUseFetch` utility, combined with a secure **Nitro Server Layer** (`server/` directory) to handle private keys, CORS limits, and server-side request proxying.
+This setup utilizes the **Repository Pattern** on the frontend alongside Nuxt's `useFetch` composable, combined with a secure **Nitro Server Layer** (`server/` directory) to handle private keys, CORS limits, and server-side request proxying.
 
 ---
 
@@ -14,7 +14,7 @@ The structure adheres entirely to the Nuxt 4 `app/` and `server/` directory spec
 vet-car-rental/
 ├── app/                    # Frontend Layer (Runs on Client & Server)
 │   ├── apis/
-│   │   ├── index.ts               # Base HTTP factory client (createUseFetch)
+│   │   ├── index.ts               # Base HTTP factory client (useApiClient)
 │   │   └── vehicleRental.repository.ts # Domain: Vehicle Catalog and Management
 │   ├── types/
 │   │   ├── api.d.ts               # Unified API contract definitions
@@ -24,11 +24,8 @@ vet-car-rental/
 │       └── index.vue              # Pure UI view component using repositories
 ├── server/                 # Backend Layer (Runs STRICTLY on the Server)
 │   ├── api/
-│   │   ├── features/
-│   │   │   ├── vehicleRental.ts   # Server-side endpoint for rental types
-│   │   │   └── filterOptions.ts   # Server-side endpoint for catalog filters
 │   │   └── proxy/
-│   │       └── [...].ts           # CORS API Reverse-Proxy endpoint
+│   │       └── [...].ts           # CORS API Reverse-Proxy catch-all endpoint
 │   ├── utils/
 │   │   └── resolveApiBaseUrl.ts   # Server-only API URL resolver
 │   └── middleware/
@@ -96,7 +93,7 @@ export interface FilterOptionsData {
 ```
 
 ### 📄 `app/apis/index.ts`
-Configures the core factory client engine using Nuxt's native `useFetch`. It targets local Nitro proxy/features while safely attaching authorization cookies.
+Configures the core factory client engine using Nuxt's native `useFetch`. It targets local Nitro proxy endpoints while safely attaching authorization headers.
 
 ```typescript
 import { useFetch, type UseFetchOptions } from '#app'
@@ -127,7 +124,7 @@ export const useApiClient = <T = any>(
 ```
 
 ### 📄 `app/apis/vehicleRental.repository.ts`
-Abstracts specific resource URLs into modular function calls, keeping pages decoupled from endpoint endpoints.
+Abstracts specific resource URLs into modular function calls via `/api/proxy/...`, keeping pages decoupled from backend endpoint changes.
 
 ```typescript
 import { useApiClient } from './index'
@@ -138,7 +135,7 @@ export const vehicleRentalRepository = {
    * Fetch available rental types
    */
   getRentalTypes() {
-    return useApiClient<ApiResponseWrapper<RawRentalTypeItem[]>>('/api/features/vehicleRental', {
+    return useApiClient<ApiResponseWrapper<RawRentalTypeItem[]>>('/api/proxy/mobile/catalog/rental-types', {
       method: 'GET',
       key: 'catalog-rental-types'
     })
@@ -148,7 +145,7 @@ export const vehicleRentalRepository = {
    * Fetch filter options
    */
   getFilterOptions() {
-    return useApiClient<ApiResponseWrapper<FilterOptionsData>>('/api/features/filterOptions', {
+    return useApiClient<ApiResponseWrapper<FilterOptionsData>>('/api/proxy/mobile/catalog/filter-options', {
       method: 'GET',
       key: 'catalog-filter-options'
     })
