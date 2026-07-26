@@ -96,35 +96,34 @@ export interface FilterOptionsData {
 ```
 
 ### 📄 `app/apis/index.ts`
-Configures the core factory client engine using Nuxt 4.4's `createUseFetch`. It targets local Nitro proxy/features while safely attaching authorization cookies.
+Configures the core factory client engine using Nuxt's native `useFetch`. It targets local Nitro proxy/features while safely attaching authorization cookies.
 
 ```typescript
-import { createUseFetch } from '#app'
+import { useFetch, type UseFetchOptions } from '#app'
 
-export const useApiClient = createUseFetch((currentOptions) => {
+export const useApiClient = <T = any>(
+  request: Parameters<typeof useFetch<T>>[0],
+  opts?: UseFetchOptions<T>
+) => {
   const { getToken } = useAuthToken()
 
-  return {
-    ...currentOptions,
-    // Interceptor: Attaches Authorization tokens prior to outgoing requests
-    onRequest({ options }) {
+  return useFetch<T>(request, {
+    ...opts,
+    onRequest(ctx) {
       const token = getToken()
       if (token) {
-        options.headers = (options.headers || {}) as Record<string, string>
-        options.headers['Authorization'] = token.startsWith('Bearer ')
-          ? token
-          : `Bearer ${token}`
+        const authValue = token.startsWith('Bearer ') ? token : `Bearer ${token}`
+        ctx.options.headers = ctx.options.headers || {}
+        (ctx.options.headers as Record<string, string>)['Authorization'] = authValue
       }
     },
-
-    // Interceptor: Catches errors globally (e.g., handles expired tokens)
-    onResponseError({ response }) {
-      if (response?.status === 401) {
+    onResponseError(ctx) {
+      if (ctx.response?.status === 401) {
         console.warn('[useApiClient] Unauthorized (401). Token may be expired.')
       }
     }
-  }
-})
+  } as UseFetchOptions<T>)
+}
 ```
 
 ### 📄 `app/apis/vehicleRental.repository.ts`
