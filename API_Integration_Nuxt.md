@@ -66,29 +66,31 @@ When a user opens the web application inside a native mobile container (such as 
 ### Mobile App Launch & Token Flow:
 
 ```
- ┌─────────────────────────────────────────────────────────────┐
- │       Mobile App (Flutter / Android WebView)                │
- │       Loads URL with HTTP Request Header:                   │
- │       `Authorization: Bearer <token>`                       │
- └──────────────────────────────┬──────────────────────────────┘
-                                │ Initial HTTP Request
- ┌──────────────────────────────▼──────────────────────────────┐
- │     Server Middleware (`server/middleware/auth.ts`)         │
- │  1. Intercepts header: `getRequestHeader(event, "auth")`   │
- │  2. Extracts token: `authHeader.substring(7).trim()`        │
- │  3. Sets cookie: `setCookie(event, "access_token", token)`  │
- └──────────────────────────────┬──────────────────────────────┘
-                                │ Cookie set for session
- ┌──────────────────────────────▼──────────────────────────────┐
- │      Client Composable (`app/composables/useAuthToken.ts`)  │
- │  - Reads reactive `useCookie("access_token")`               │
- │  - Syncs to `localStorage` on client side                   │
- └──────────────────────────────┬──────────────────────────────┘
-                                │ Token ready
- ┌──────────────────────────────▼──────────────────────────────┐
- │      Base API Client (`app/apis/index.ts`)                  │
- │  - Automatically attaches token to all backend API calls    │
- └─────────────────────────────────────────────────────────────┘
+sequenceDiagram
+    autonumber
+    actor App as Mobile App (Flutter / Android WebView)
+    participant Middleware as Server Middleware<br/>(<code>server/middleware/auth.ts</code>)
+    participant CookieStore as Client Composable<br/>(<code>app/composables/useAuthToken.ts</code>)
+    participant ApiClient as Base API Client<br/>(<code>app/apis/index.ts</code>)
+
+    Note over App, ApiClient: Authentication Token Propagation Flow
+
+    App->>Middleware: Initial HTTP Request + <code>Authorization: Bearer &lt;token&gt;</code>
+    
+    activate Middleware
+    Note right of Middleware: 1. Intercept header<br/>2. Extract token<br/>3. Set session cookie
+    Middleware-->>CookieStore: Sets cookie <code>access_token</code>
+    deactivate Middleware
+
+    activate CookieStore
+    Note right of CookieStore: - Reads reactive <code>useCookie("access_token")</code><br/>- Syncs to <code>localStorage</code>
+    CookieStore-->>ApiClient: Token ready for consumption
+    deactivate CookieStore
+
+    activate ApiClient
+    Note right of ApiClient: Automatically attaches token<br/>to all backend API calls
+    ApiClient-->>ApiClient: Final API Request with Bearer Token
+    deactivate ApiClient
 ```
 
 ### Key Implementation Files:
