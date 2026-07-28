@@ -1,6 +1,6 @@
 # API Integration Documentation - VET Car Rental App
 
-This document provides a comprehensive guide to the API architecture, HTTP client setup, domain repositories, authentication mechanism, and proxy forwarding implemented in the **VET Car Rental Customer App** (Nuxt 4 / Vue 3 / Ionic).
+This document provides a comprehensive guide to the API architecture, HTTP client setup, domain repositories, authentication mechanism, header token extraction, and proxy forwarding implemented in the **VET Car Rental Customer App** (Nuxt 4 / Vue 3 / Ionic).
 
 ---
 
@@ -37,12 +37,6 @@ The API integration follows a clean **Repository & Proxy Architecture**:
  └─────────────────────────────────────────────────────────────┘
 ```
 
-### Key Architectural Benefits:
-- **No CORS Issues**: Client requests hit local `/api/proxy/...` routes, which Nitro forwards server-to-server to the target API.
-- **Environment Agnostic**: Server and Client dynamically select environment base URLs (`dev`, `qa`, `local`, `production`).
-- **Centralized Authorization**: Bearer tokens are attached automatically in `useApiClient` without redundant boilerplates in pages.
-- **Strict Type Safety**: All requests, responses, and query payloads use centralized TypeScript interfaces defined in `app/types/`.
-
 ---
 
 ## 🛠️ 2. Core HTTP Client (`useApiClient`)
@@ -63,20 +57,96 @@ export const useApiClient = <T = any>(
 }
 ```
 
-### Features:
-1. **Token Injection**: Calls `useAuthToken().getToken()` on every request and sets `Authorization: Bearer <token>`.
-2. **Error Interception**: Checks response status; logs warnings when receiving `401 Unauthorized` for token refresh or re-authentication handling.
-3. **Response Structure Support**: Returns reactive `{ data, pending, error, refresh }` variables standard in Nuxt applications.
-
 ---
 
-## 🛡️ 3. Authentication & Token Management
+## 🔑 3. Header Token Extraction on Mobile App Launch
 
-**Location:** [`app/composables/useAuthToken.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/composables/useAuthToken.ts)
+When a user opens the web application inside a native mobile container (such as an Android WebView or Flutter WebView), the mobile app injects the authentication token inside the initial HTTP request headers.
 
-- **Single Source of Truth**: Uses Nuxt `useCookie("access_token")` (valid for 7 days, path `/`) for universal SSR/CSR support.
-- **LocalStorage Sync**: On client-side navigation, fallback tokens are synchronized with `localStorage.getItem("access_token")`.
-- **Mobile WebView Bridge Integration**: [`nuxt.config.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/nuxt.config.ts) injects a global JS handler `window.setMobileToken(token)` to support token passing from Flutter or native Android WebViews.
+### Mobile App Launch & Token Flow:
+
+```
+ ┌─────────────────────────────────────────────────────────────┐
+ │       Mobile App (Flutter / Android WebView)                │
+ │       Loads URL with HTTP Request Header:                   │
+ │       `Authorization: Bearer <token>`                       │
+ └──────────────────────────────┬──────────────────────────────┘
+                                │ Initial HTTP Request
+ ┌──────────────────────────────▼──────────────────────────────┐
+ │     Server Middleware (`server/middleware/auth.ts`)         │
+ │  1. Intercepts header: `getRequestHeader(event, "auth")`   │
+ │  2. Extracts token: `authHeader.substring(7).trim()`        │
+ │  3. Sets cookie: `setCookie(event, "access_token", token)`  │
+ └──────────────────────────────┬──────────────────────────────┘
+                                │ Cookie set for session
+ ┌──────────────────────────────▼──────────────────────────────┐
+ │      Client Composable (`app/composables/useAuthToken.ts`)  │
+ │  - Reads reactive `useCookie("access_token")`               │
+ │  - Syncs to `localStorage` on client side                   │
+ └──────────────────────────────┬──────────────────────────────┘
+                                │ Token ready
+ ┌──────────────────────────────▼──────────────────────────────┐
+ │      Base API Client (`app/apis/index.ts`)                  │
+ │  - Automatically attaches token to all backend API calls    │
+ └─────────────────────────────────────────────────────────────┘
+```
+
+### Key Implementation Files:
+
+1. **Server Middleware Interception** ([`server/middleware/auth.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/server/middleware/auth.ts)):
+   - Executes on every incoming HTTP request on the server side.
+   - Reads the `authorization` header using `getRequestHeader(event, "authorization")`.
+   - Checks if the header starts with `"Bearer "`.
+   - Extracts the clean token string.
+   - Saves it to Nuxt's `access_token` cookie (path `/`, maxAge 7 days).
+
+```typescript
+export default defineEventHandler((event) => {
+  const authHeader = getRequestHeader(event, "authorization");
+
+  if (authHeader && authHeader.toLowerCase().startsWith("bearer ")) {
+    const token = authHeader.substring(7).trim();
+
+    if (token) {
+      setCookie(event, "access_token", token, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+        httpOnly: false,
+        sameSite: "lax",
+      });
+    }
+  }
+});
+```
+
+2. **Frontend Token Hydration** ([`app/composables/useAuthToken.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/composables/useAuthToken.ts)):
+   - Reads `useCookie("access_token")`, which immediately contains the token set by the server middleware during the initial page load.
+   - Synchronizes `localStorage.setItem("access_token", token)` on the client.
+
+```typescript
+export const useAuthToken = () => {
+  const cookieToken = useCookie<string | null>("access_token", {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+
+  const getToken = (): string | null => {
+    if (cookieToken.value) return cookieToken.value;
+    if (import.meta.client) {
+      const localToken = localStorage.getItem("access_token");
+      if (localToken) {
+        cookieToken.value = localToken;
+        return localToken;
+      }
+    }
+    return null;
+  };
+  // ...
+};
+```
+
+3. **Client JavaScript Bridge Fallback** ([`nuxt.config.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/nuxt.config.ts)):
+   - Inject global fallback function `window.setMobileToken(token)` for WebViews that inject tokens via JavaScript execution instead of HTTP headers.
 
 ---
 
@@ -84,21 +154,8 @@ export const useApiClient = <T = any>(
 
 **Configuration File:** [`nuxt.config.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/nuxt.config.ts)
 
-### Environment Variables (`.env`)
-```env
-VITE_NODE_ENV=dev
-VITE_APP_NAME=VET Car Rental
-VITE_API_URL=              # (Optional direct override URL)
-VITE_API_URL_DEV=http://...
-VITE_API_URL_QA=http://...
-VITE_API_URL_LOCAL=http://...
-VITE_API_URL_PROD=https://...
-VITE_GOOGLE_MAP_API_KEY=AIzaSy...
-```
-
-### Resolution Utilities:
-- **Client Side**: [`app/composables/useApiUrl.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/composables/useApiUrl.ts) evaluates `VITE_NODE_ENV` to pick the correct API base URL.
-- **Server Side (Nitro)**: [`server/utils/resolveApiBaseUrl.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/server/utils/resolveApiBaseUrl.ts) resolves the target URL server-side from `useRuntimeConfig()`, adhering to Nuxt boundary rules.
+- **Client Side**: [`app/composables/useApiUrl.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/composables/useApiUrl.ts) evaluates `VITE_NODE_ENV` to select the API base URL.
+- **Server Side (Nitro)**: [`server/utils/resolveApiBaseUrl.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/server/utils/resolveApiBaseUrl.ts) resolves the target URL server-side from `useRuntimeConfig()`.
 
 ---
 
@@ -117,15 +174,9 @@ export default defineEventHandler(async (event) => {
 });
 ```
 
-Example mapping:
-- Client call: `/vet-car-rental/api/proxy/mobile/catalog/vehicles`
-- Target backend: `https://<backend-host>/mobile/catalog/vehicles`
-
 ---
 
 ## 📚 6. Domain Repositories & Endpoints
-
-All domain endpoints are encapsulated in the `app/apis/` directory:
 
 | Repository File | Domain | Method & Endpoint | Description |
 |---|---|---|---|
@@ -143,74 +194,12 @@ All domain endpoints are encapsulated in the `app/apis/` directory:
 
 ---
 
-## 📦 7. Data Contracts & Response Wrappers
+## 📱 7. Native Mobile App Integration (Bridge)
 
-**Location:** [`app/types/api.d.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/types/api.d.ts)
-
-All backend endpoints respond with a unified envelope structure:
-
-```typescript
-export interface ApiResponseWrapper<T> {
-  success: boolean;
-  status: number;
-  message: string;
-  data: T;
-  timestamp: string;
-}
-```
-
-### Key Request Payload & Data Interfaces:
-- **`CreateBookingPayload`** ([`app/types/booking.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/types/booking.ts)): Used in `bookingRepository.placeBooking()`. Includes rental type, dates, customer contact info, trip destinations, and luggage details.
-- **`VehicleListParams`** ([`app/types/api.d.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/types/api.d.ts)): Filtering criteria for querying vehicles.
-- **`DropdownItem`** ([`app/types/drop-down.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/types/drop-down.ts)): Standard shape `{ id, code, nameKh, nameEn, nameZh }` for location dropdowns.
-
----
-
-## 📱 8. Native Mobile App Integration (Bridge)
-
-**Composables & Plugins:**
 - [`app/composables/useNativeBridge.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/composables/useNativeBridge.ts)
 - [`app/plugins/flutter-title.client.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/app/plugins/flutter-title.client.ts)
 
-Provides communication handlers between the Nuxt web application running inside mobile WebViews (Flutter or Native Android):
-- `sendTitleToFlutter(title)`: Notifies Flutter WebView container to update app bar headers via `flutter_inappwebview` or `SetAppBarTitle.postMessage()`.
+Provides communication handlers:
+- `sendTitleToFlutter(title)`: Notifies Flutter WebView container to update app bar header titles.
 - `showToast(message)`: Calls native `Android.showToast()` bridge.
-- `closeApp()`: Calls native `Android.closeApp()` bridge to close the WebView container.
-
----
-
-## 💻 9. Example Code Usage
-
-### Fetching Vehicles in a Page:
-```typescript
-import { vehicleRentalRepository } from '~/apis/vehicleRental.repository'
-
-// Executes GET /api/proxy/mobile/catalog/vehicles/{id}
-const vehicleId = 12
-const { data: response, pending, error } = await vehicleRentalRepository.getVehicleDetail(vehicleId)
-
-if (response.value?.success) {
-  const vehicleDetail = response.value.data
-  console.log('Vehicle loaded:', vehicleDetail.nameEn)
-}
-```
-
-### Submitting a Booking Payload:
-```typescript
-import { bookingRepository } from '~/apis/booking.repository'
-import type { CreateBookingPayload } from '~/types/booking'
-
-const payload: CreateBookingPayload = {
-  rentalTypeId: 1,
-  rentalTypeName: 'Domestic Rental',
-  pickupDate: '2026-08-01',
-  pickupTime: '08:00',
-  dropOffDate: '2026-08-05',
-  dropOffTime: '17:00',
-  customerName: 'John Doe',
-  customerPhone: '+85512345678',
-  trips: [...]
-}
-
-const { data: result } = await bookingRepository.placeBooking(payload)
-```
+- `closeApp()`: Calls native `Android.closeApp()` bridge.
