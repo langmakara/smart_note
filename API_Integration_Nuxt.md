@@ -65,32 +65,17 @@ When a user opens the web application inside a native mobile container (such as 
 
 ### Mobile App Launch & Token Flow:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor App as Mobile App (Flutter / Android WebView)
-    participant Middleware as Server Middleware (auth.ts)
-    participant CookieStore as Client Composable (useAuthToken.ts)
-    participant ApiClient as Base API Client (index.ts)
-
-    Note over App, ApiClient: Authentication Token Propagation Flow
-
-    App->>Middleware: Initial HTTP Request + `Authorization: Bearer <token>`
+graph TD
+    A["📱 Mobile App (Flutter / Android WebView)<br>Loads URL with HTTP Request Header:<br><code>Authorization: Bearer &lt;token&gt;</code>"] -->|Initial HTTP Request| B["⚙️ Server Middleware (`server/middleware/auth.ts`)<br>1. Intercepts header: <code>getRequestHeader(event, 'auth')</code><br>2. Extracts token: <code>authHeader.substring(7).trim()</code><br>3. Sets cookie: <code>setCookie(event, 'access_token', token)</code>"]
     
-    activate Middleware
-    Note right of Middleware: 1. Intercept header<br/>2. Extract token<br/>3. Set session cookie
-    Middleware-->>CookieStore: Sets cookie `access_token`
-    deactivate Middleware
+    B -->|Cookie set for session| C["💻 Client Composable (`app/composables/useAuthToken.ts`)<br>- Reads reactive <code>useCookie('access_token')</code><br>- Syncs to <code>localStorage</code> on client side"]
+    
+    C -->|Token ready| D["🔌 Base API Client (`app/apis/index.ts`)<br>- Automatically attaches token to all backend API calls"]
 
-    activate CookieStore
-    Note right of CookieStore: - Reads reactive `useCookie("access_token")`<br/>- Syncs to `localStorage`
-    CookieStore-->>ApiClient: Token ready for consumption
-    deactivate CookieStore
-
-    activate ApiClient
-    Note right of ApiClient: Automatically attaches token<br/>to all backend API calls
-    ApiClient-->>ApiClient: Final API Request with Bearer Token
-    deactivate ApiClient
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#bfb,stroke:#333,stroke-width:2px
+    style D fill:#ff9,stroke:#333,stroke-width:2px
 
 ### Key Implementation Files:
 
