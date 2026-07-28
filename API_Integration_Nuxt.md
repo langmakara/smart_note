@@ -65,25 +65,25 @@ When a user opens the web application inside a native mobile container (such as 
 
 ### Mobile App Launch & Token Flow:
 
-```
+```mermaid
 sequenceDiagram
     autonumber
     actor App as Mobile App (Flutter / Android WebView)
-    participant Middleware as Server Middleware<br/>(<code>server/middleware/auth.ts</code>)
-    participant CookieStore as Client Composable<br/>(<code>app/composables/useAuthToken.ts</code>)
-    participant ApiClient as Base API Client<br/>(<code>app/apis/index.ts</code>)
+    participant Middleware as Server Middleware<br/>(`server/middleware/auth.ts`)
+    participant CookieStore as Client Composable<br/>(`app/composables/useAuthToken.ts`)
+    participant ApiClient as Base API Client<br/>(`app/apis/index.ts`)
 
     Note over App, ApiClient: Authentication Token Propagation Flow
 
-    App->>Middleware: Initial HTTP Request + <code>Authorization: Bearer &lt;token&gt;</code>
+    App->>Middleware: Initial HTTP Request + `Authorization: Bearer <token>`
     
     activate Middleware
     Note right of Middleware: 1. Intercept header<br/>2. Extract token<br/>3. Set session cookie
-    Middleware-->>CookieStore: Sets cookie <code>access_token</code>
+    Middleware-->>CookieStore: Sets cookie `access_token`
     deactivate Middleware
 
     activate CookieStore
-    Note right of CookieStore: - Reads reactive <code>useCookie("access_token")</code><br/>- Syncs to <code>localStorage</code>
+    Note right of CookieStore: - Reads reactive `useCookie("access_token")`<br/>- Syncs to `localStorage`
     CookieStore-->>ApiClient: Token ready for consumption
     deactivate CookieStore
 
@@ -91,7 +91,6 @@ sequenceDiagram
     Note right of ApiClient: Automatically attaches token<br/>to all backend API calls
     ApiClient-->>ApiClient: Final API Request with Bearer Token
     deactivate ApiClient
-```
 
 ### Key Implementation Files:
 
