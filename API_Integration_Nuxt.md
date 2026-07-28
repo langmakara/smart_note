@@ -65,18 +65,31 @@ When a user opens the web application inside a native mobile container (such as 
 
 ### Mobile App Launch & Token Flow:
 
-graph TD
-    A["📱 Mobile App (Flutter / Android WebView)<br>Loads URL with HTTP Request Header:<br><code>Authorization: Bearer &lt;token&gt;</code>"] -->|Initial HTTP Request| B["⚙️ Server Middleware (`server/middleware/auth.ts`)<br>1. Intercepts header: <code>getRequestHeader(event, 'auth')</code><br>2. Extracts token: <code>authHeader.substring(7).trim()</code><br>3. Sets cookie: <code>setCookie(event, 'access_token', token)</code>"]
-    
-    B -->|Cookie set for session| C["💻 Client Composable (`app/composables/useAuthToken.ts`)<br>- Reads reactive <code>useCookie('access_token')</code><br>- Syncs to <code>localStorage</code> on client side"]
-    
-    C -->|Token ready| D["🔌 Base API Client (`app/apis/index.ts`)<br>- Automatically attaches token to all backend API calls"]
-
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bfb,stroke:#333,stroke-width:2px
-    style D fill:#ff9,stroke:#333,stroke-width:2px
-
+```
+┌─────────────────────────────────────────────────────────────┐
+ │                Mobile App (Flutter / Android WebView)       │
+ │                Loads URL with HTTP Request Header:          │
+ │                `Authorization: Bearer <token>`              │
+ └──────────────────────────────┬──────────────────────────────┘
+                                │ Initial HTTP Request
+ ┌──────────────────────────────▼──────────────────────────────┐
+ │         Server Middleware (`server/middleware/auth.ts`)     │
+ │  1. Intercepts header: `getRequestHeader(event, "auth")`    │
+ │  2. Extracts token: `authHeader.substring(7).trim()`        │
+ │  3. Sets cookie: `setCookie(event, "access_token", token)`  │
+ └──────────────────────────────┬──────────────────────────────┘
+                                │ Cookie set for session
+ ┌──────────────────────────────▼──────────────────────────────┐
+ │         Client Composable (`app/composables/useAuthToken.ts`)│
+ │  - Reads reactive `useCookie("access_token")`               │
+ │  - Syncs to `localStorage` on client side                   │
+ └──────────────────────────────┬──────────────────────────────┘
+                                │ Token ready
+ ┌──────────────────────────────▼──────────────────────────────┐
+ │         Base API Client (`app/apis/index.ts`)               │
+ │  - Automatically attaches token to all backend API calls    │
+ └─────────────────────────────────────────────────────────────┘
+```
 ### Key Implementation Files:
 
 1. **Server Middleware Interception** ([`server/middleware/auth.ts`](file:///d:/UDAYA/github/PR_VET_Car_Rental_ReactJS/apps/vet-car-rental/server/middleware/auth.ts)):
