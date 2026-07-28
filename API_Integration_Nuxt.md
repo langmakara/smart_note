@@ -69,9 +69,9 @@ When a user opens the web application inside a native mobile container (such as 
 sequenceDiagram
     autonumber
     actor App as Mobile App (Flutter / Android WebView)
-    participant Middleware as Server Middleware<br/>(`server/middleware/auth.ts`)
-    participant CookieStore as Client Composable<br/>(`app/composables/useAuthToken.ts`)
-    participant ApiClient as Base API Client<br/>(`app/apis/index.ts`)
+    participant Middleware as Server Middleware (auth.ts)
+    participant CookieStore as Client Composable (useAuthToken.ts)
+    participant ApiClient as Base API Client (index.ts)
 
     Note over App, ApiClient: Authentication Token Propagation Flow
 
